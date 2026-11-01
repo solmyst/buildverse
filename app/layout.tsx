@@ -28,16 +28,16 @@ const fragmentMono = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://anush.tech'),
+  metadataBase: new URL('https://buildverse.anush.tech'),
   title: "Anush Gupta — Buildverse City",
   description: "Explore Anush Gupta’s 3D portfolio city: project buildings, engineering floors, product decisions, and experience at Park+.",
   alternates: {
-    canonical: 'https://anush.tech',
+    canonical: 'https://buildverse.anush.tech',
   },
   openGraph: {
     title: "Anush Gupta — Buildverse City",
     description: "Explore Anush Gupta’s 3D portfolio city: project buildings, engineering floors, product decisions, and experience at Park+.",
-    url: "https://anush.tech",
+    url: "https://buildverse.anush.tech",
     siteName: "Anush Gupta Portfolio",
     locale: "en_US",
     type: "website",
