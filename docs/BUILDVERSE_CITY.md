@@ -49,3 +49,9 @@ A fenced construction site on the western waterfront represents the existing `cu
 A personal coastal garden layer adds an original red gateway, stone lanterns, seven cherry trees, and 210 instanced falling petals. The southern lawn hosts After Hours Cinema with six seated characters, string lights, and a locally generated screen alternating original landscape animation and playful coding. No third-party film clips, streaming APIs, or external media are loaded. Both places are reachable through the directory and have dedicated arrival cameras.
 
 A forested headland frames the northern bay. A propeller plane circles above the coast and three cabin boats travel offshore, with tangent-aligned headings and wakes. Boat-route tests verify clearance from the island. All scenery animation follows the existing pause, visibility and reduced-motion controls; the screen updates at eight frames per second and petals share one instanced draw call.
+
+## Solmyst Courtyard and discoveries
+
+The previously unassigned central plot at (-8, 8) now holds an open pavilion, benches, planters, a guitar display, a miniature race car, and an arcade cabinet. The directory provides an arrival camera. The three display stands have collision footprints, while the courtyard stays walkable.
+
+Three 3D objects reveal profile details; a classic keyboard sequence unlocks a fourth discovery. The journal is reachable from the desktop passport or the directory on every screen size, and provides keyboard-accessible inspection of the physical objects. Discoveries persist only in session storage, with unknown/duplicate entries rejected. Modal focus and movement blocking use the existing dialog system. No new real-life anecdotes are invented: content uses confirmed hobbies and the existing DSA statistic. Personal incidents can be added once Anush provides them.

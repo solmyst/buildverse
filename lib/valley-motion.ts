@@ -1,4 +1,5 @@
 export const valleyPlaces = [
+  { id: "courtyard", name: "Solmyst Courtyard", detail: "Guitar, F1 & hidden developer curiosities", x: -8, z: 13 },
   { id: "garden", name: "Sakura Garden", detail: "Cherry blossoms, lanterns & a quiet pond", x: 23, z: 34 },
   { id: "cinema", name: "After Hours Cinema", detail: "Original animation, coding & a seated audience", x: -23, z: 38 },
 ] as const;

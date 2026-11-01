@@ -29,6 +29,8 @@ import {
 } from "@/lib/city-layout";
 import { personal } from "@/lib/data";
 import type { createCity, CitySnapshot } from "./engine";
+import DiscoveryJournal from "./discovery-journal";
+import { isDiscovery, restoreDiscoveries, advanceSecret, type DiscoveryId } from "@/lib/city-discoveries";
 import CityDirectory from "./directory";
 import Dossier from "./dossier";
 import CityMinimap from "./minimap";
@@ -55,11 +57,13 @@ export default function CityApp() {
   const engine = useRef<ReturnType<typeof createCity>>();
   const actions = useRef<{
     enter: (id: string, floor: number) => void;
+    discover: (id: string) => void;
     read: () => void;
     exit: () => void;
     play: () => void;
   }>({
     enter: () => {},
+    discover: () => {},
     read: () => {},
     exit: () => {},
     play: () => {},
@@ -72,6 +76,9 @@ export default function CityApp() {
   const [directory, setDirectory] = useState(false),
     [help, setHelp] = useState(true),
     [expanded, setExpanded] = useState(false);
+  const [journal, setJournal] = useState(false);
+  const [selectedDiscovery, setSelectedDiscovery] = useState<DiscoveryId | null>(null);
+  const [discoveries, setDiscoveries] = useState<DiscoveryId[]>([]);
   const [place, setPlace] = useState<string | null>(null);
   const [living, setLiving] = useState(true);
   const [night, setNight] = useState(false),
@@ -161,7 +168,29 @@ export default function CityApp() {
     updateRoute(null);
     engine.current?.walk();
   }
+  function discover(id: string) {
+    if (!isDiscovery(id)) return;
+    setSelectedDiscovery(id); setJournal(true);
+    setDiscoveries(current => {
+      const next = current.includes(id) ? current : [...current, id];
+      try { sessionStorage.setItem("solmyst-discoveries", JSON.stringify(next)); } catch { /* Optional journal storage. */ }
+      return next;
+    });
+    engine.current?.celebrateDiscovery();
+  }
+  useEffect(() => {
+    try { setDiscoveries(restoreDiscoveries(sessionStorage.getItem("solmyst-discoveries"))); } catch { /* Optional storage. */ }
+    let progress = 0;
+    const handler = (event: KeyboardEvent) => {
+      if (event.repeat || (event.target as HTMLElement)?.closest("input,textarea,dialog,[contenteditable=true]")) return;
+      const result = advanceSecret(progress, event.key); progress = result.progress;
+      if (result.unlocked) actions.current.discover("konami");
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
   actions.current = {
+    discover,
     enter: visit,
     read: openDossier,
     exit: goWalking,
@@ -218,6 +247,7 @@ export default function CityApp() {
           engine.current = createCity(canvas.current!, {
             onEnter: (id, level) => actions.current.enter(id, level),
             onRead: () => actions.current.read(),
+            onDiscover: (id) => actions.current.discover(id),
             onExit: () => actions.current.exit(),
             onUpdate: setSnapshot,
             onHover: setHover,
@@ -251,8 +281,8 @@ export default function CityApp() {
     else engine.current?.overview();
   }, [ready, route?.id, route?.floor, travel, enterVersion, place]);
   useEffect(() => {
-    engine.current?.setBlocked(directory || !!route?.reading);
-  }, [ready, directory, route?.reading]);
+    engine.current?.setBlocked(directory || journal || !!route?.reading);
+  }, [ready, directory, journal, route?.reading]);
   useEffect(() => {
     engine.current?.setNight(night);
   }, [ready, night]);
@@ -677,13 +707,13 @@ export default function CityApp() {
             </span>
           )}
         </div>
-        <div className="city-passport">
+        <button type="button" className="city-passport" aria-label={`Open discovery journal, ${discoveries.length} secrets found`} onClick={() => { setSelectedDiscovery(null); setJournal(true); }}>
           <span>
             {String(visited.length).padStart(2, "0")}
             <small> / {cityBuildings.length}</small>
           </span>
-          <p>ADDRESSES DISCOVERED</p>
-        </div>
+          <p>ADDRESSES · {discoveries.length}/4 SECRETS</p>
+        </button>
       </footer>
       <CityDirectory
         open={directory}
@@ -691,7 +721,9 @@ export default function CityApp() {
         onVisit={(id) => visit(id, 0)}
         onExplore={unavailable ? undefined : (id) => { setDirectory(false); setHelp(false); setTravel("walk"); setPlace(id); setEnterVersion(value => value + 1); updateRoute(null); }}
         visited={visited}
+        onJournal={() => { setDirectory(false); setSelectedDiscovery(null); setJournal(true); }}
       />
+      <DiscoveryJournal open={journal} onClose={() => setJournal(false)} found={discoveries} selected={selectedDiscovery} onDiscover={discover} />
       <Dossier
         building={active}
         floor={floor}

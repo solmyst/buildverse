@@ -1545,3 +1545,14 @@
 @media (max-width: 650px) {
   .city-weather-control { top: 76px; right: 12px; padding: 6px 8px; font-size: 10px; }
 }
+
+.city-journal-body { padding: 28px; }
+.city-journal-body h2 { font-size: clamp(1.7rem, 4vw, 2.6rem); line-height: 1.1; margin: 12px 0 20px; }
+.city-journal-body p { line-height: 1.7; color: var(--muted); }
+.city-journal-intro { margin: 20px 0; }
+.city-journal-list { display: grid; gap: 16px; list-style: none; padding: 0; }
+.city-journal-list li { padding: 18px; border: 1px solid var(--hud-line); border-radius: 12px; }
+.city-journal-list strong { color: #e5c78d; }
+.city-journal-list p { margin: 8px 0 12px; }
+.city-journal-list button { padding: 10px 14px; min-height: 44px; }
+.city-passport:focus-visible { outline: 2px solid #b9e5ce; outline-offset: 4px; border-radius: 6px; }

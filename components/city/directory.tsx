@@ -9,6 +9,7 @@ export default function CityDirectory({
   onClose,
   onVisit,
   onExplore,
+  onJournal,
   visited,
 }: {
   open: boolean;
@@ -16,6 +17,7 @@ export default function CityDirectory({
   onVisit: (id: string) => void;
   visited: string[];
   onExplore?: (id: string) => void;
+  onJournal: () => void;
 }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All addresses");
@@ -115,6 +117,7 @@ export default function CityDirectory({
           </button>
         </div>
       )}
+      <button type="button" className="city-secondary" onClick={onJournal}>Open discovery journal</button>
       <p className="directory-note">
         The directory also works when the 3D view is unavailable. Every
         destination’s written content is accessible here.

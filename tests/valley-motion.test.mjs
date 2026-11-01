@@ -11,5 +11,5 @@ test("coastal boats stay clear of the island and face their direction of travel"
     const heading = Math.atan2(next.x - point.x, next.z - point.z);
     assert.ok(Math.abs(Math.atan2(Math.sin(heading - point.heading), Math.cos(heading - point.heading))) < 0.001);
   }
-  assert.equal(new Set(valleyPlaces.map(place => place.id)).size, 2);
+  assert.equal(new Set(valleyPlaces.map(place => place.id)).size, 3);
 });
