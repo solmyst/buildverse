@@ -1,3 +1,5 @@
+import { valleyPlaces } from "@/lib/valley-motion";
+import { createSakuraValley } from "./sakura-valley";
 import { cityWeather } from "@/lib/city-weather";
 import { createConstruction } from "./construction";
 import { createWeather } from "./weather";
@@ -221,6 +223,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
   scene.add(stars);
   const sky = createSky(scene, kit);
   const construction = createConstruction(city, kit);
+  const sakuraValley = createSakuraValley(city, scene, kit);
   const weatherView = createWeather(scene, kit);
   let living = true, worldSeconds = 0;
   // Time of day: 0 is noon, 1 is night; toggling sweeps through a sunset.
@@ -650,6 +653,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
       citizenRing.rotation.z = elapsed * 0.2;
       island.update(elapsed);
       construction.update(elapsed, delta);
+      sakuraValley.update(elapsed);
       crowd.update(
         delta,
         elapsed,
@@ -833,6 +837,19 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
   sync();
   update();
   return {
+    visitPlace(id: string) {
+      const place = valleyPlaces.find(item => item.id === id);
+      if (!place) return;
+      parkHero(); clearRoom(); active = null; mode = "street";
+      position = { x: place.x, z: place.z };
+      player.position.set(position.x, groundY, position.z);
+      player.rotation.y = Math.PI;
+      controls.minDistance = 5; controls.maxDistance = 80;
+      const target = new THREE.Vector3(place.x, 2, place.z - 4);
+      const offset = new THREE.Vector3(9, 7, 16).multiplyScalar(Math.max(1, 0.95 / camera.aspect));
+      setFlight(target.clone().add(offset), target);
+      update();
+    },
     overview,
     walk,
     inspect,

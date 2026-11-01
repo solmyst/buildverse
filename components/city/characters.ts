@@ -91,6 +91,8 @@ export function createCharacter(kit: SceneKit, look: Look) {
   let phase = 0;
   return {
     root,
+    legs,
+    head,
     // speed: 0 idle, 1 walk, ~1.8 sprint. airborne overrides the gait with a tuck.
     animate(delta: number, speed: number, airborne = false, time = 0) {
       phase += delta * (4 + speed * 5);

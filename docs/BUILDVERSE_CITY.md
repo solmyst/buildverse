@@ -43,3 +43,9 @@ Rendering references: https://threejs.org/docs/pages/WebGLRenderer.html and http
 The automatic world clock represents 24 hours in ten minutes of active play. Local simulated cloud cover, rain, and temperature follow smooth cycles; the HUD labels this as SIM, not real-world weather. The automatic cycle can be disabled; manual day/night lighting remains available. Pausing, hiding the tab, opening a dossier, or requesting reduced motion stops the automatic simulation.
 
 A fenced construction site on the western waterfront represents the existing `currently.learning` portfolio data. Four scripted workers, a lifting/slewing crane, an unfinished frame, and material stacks show work in progress. The footprint blocks visitors and cars. Selecting the site opens the Observatory dossier. This is a visual metaphor for learning, not a claim of an upcoming internship. No AI service, external weather feed, credentials, or paid API is required.
+
+## Sakura Valley
+
+A personal coastal garden layer adds an original red gateway, stone lanterns, seven cherry trees, and 210 instanced falling petals. The southern lawn hosts After Hours Cinema with six seated characters, string lights, and a locally generated screen alternating original landscape animation and playful coding. No third-party film clips, streaming APIs, or external media are loaded. Both places are reachable through the directory and have dedicated arrival cameras.
+
+A forested headland frames the northern bay. A propeller plane circles above the coast and three cabin boats travel offshore, with tangent-aligned headings and wakes. Boat-route tests verify clearance from the island. All scenery animation follows the existing pause, visibility and reduced-motion controls; the screen updates at eight frames per second and petals share one instanced draw call.

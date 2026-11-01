@@ -2,17 +2,20 @@
 import { useState } from "react";
 import { ArrowUpRight, Building2, Search } from "lucide-react";
 import { cityBuildings } from "@/lib/city-layout";
+import { valleyPlaces } from "@/lib/valley-motion";
 import CityDialog from "./dialog";
 export default function CityDirectory({
   open,
   onClose,
   onVisit,
+  onExplore,
   visited,
 }: {
   open: boolean;
   onClose: () => void;
   onVisit: (id: string) => void;
   visited: string[];
+  onExplore?: (id: string) => void;
 }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All addresses");
@@ -26,6 +29,7 @@ export default function CityDirectory({
         .toLowerCase()
         .includes(query.toLowerCase()),
   );
+  const places = onExplore && filter !== "Projects" ? valleyPlaces.filter(place => `${place.name} ${place.detail}`.toLowerCase().includes(query.toLowerCase())) : [];
   return (
     <CityDialog
       open={open}
@@ -66,9 +70,10 @@ export default function CityDirectory({
         </div>
       </div>
       <p className="city-directory-count" role="status">
-        {results.length} destinations
+        {results.length + places.length} destinations
       </p>
       <div className="directory-buildings">
+        {places.map(place => <button type="button" key={place.id} onClick={() => onExplore?.(place.id)} aria-label={`Explore ${place.name}`}><span className="directory-building-icon">✿</span><span><strong>{place.name}</strong><small>{place.detail}</small></span><ArrowUpRight size={16}/></button>)}
         {results.map((building) => (
           <button
             type="button"
@@ -96,7 +101,7 @@ export default function CityDirectory({
           </button>
         ))}
       </div>
-      {results.length === 0 && (
+      {results.length === 0 && places.length === 0 && (
         <div className="directory-empty">
           <p>No address found.</p>
           <button

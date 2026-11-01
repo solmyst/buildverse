@@ -72,6 +72,7 @@ export default function CityApp() {
   const [directory, setDirectory] = useState(false),
     [help, setHelp] = useState(true),
     [expanded, setExpanded] = useState(false);
+  const [place, setPlace] = useState<string | null>(null);
   const [living, setLiving] = useState(true);
   const [night, setNight] = useState(false),
     [paused, setPaused] = useState(false);
@@ -104,6 +105,7 @@ export default function CityApp() {
     );
   }
   function visit(id: string, level = 0, reading = false) {
+    setPlace(null);
     const building = cityBuildings.find((item) => item.id === id);
     if (!building || level < 0 || level >= building.floors.length) return;
     setDirectory(false);
@@ -142,12 +144,14 @@ export default function CityApp() {
       updateRoute({ ...routeRef.current, reading: false }, true);
   }
   function goOverview() {
+    setPlace(null);
     setHelp(false);
     setTravel("overview");
     updateRoute(null);
     engine.current?.overview();
   }
   function goWalking() {
+    setPlace(null);
     if (!mission) {
       setMission({ index: 0, stop: 0 });
       announce(cityMissions[0].title, `Mission start · go to ${buildingName(cityMissions[0].stops[0])}`);
@@ -165,6 +169,7 @@ export default function CityApp() {
   };
   useEffect(() => {
     const synchronize = () => {
+      setPlace(null);
       const next = parseCityRoute(window.location.hash);
       if (
         next?.id !== routeRef.current?.id ||
@@ -241,9 +246,10 @@ export default function CityApp() {
   useEffect(() => {
     if (!ready) return;
     if (route?.id) engine.current?.enter(route.id, route.floor);
+    else if (place) engine.current?.visitPlace(place);
     else if (travel === "walk") engine.current?.walk();
     else engine.current?.overview();
-  }, [ready, route?.id, route?.floor, travel, enterVersion]);
+  }, [ready, route?.id, route?.floor, travel, enterVersion, place]);
   useEffect(() => {
     engine.current?.setBlocked(directory || !!route?.reading);
   }, [ready, directory, route?.reading]);
@@ -683,6 +689,7 @@ export default function CityApp() {
         open={directory}
         onClose={() => setDirectory(false)}
         onVisit={(id) => visit(id, 0)}
+        onExplore={unavailable ? undefined : (id) => { setDirectory(false); setHelp(false); setTravel("walk"); setPlace(id); updateRoute(null); }}
         visited={visited}
       />
       <Dossier
