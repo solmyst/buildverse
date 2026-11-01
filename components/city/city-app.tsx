@@ -689,7 +689,7 @@ export default function CityApp() {
         open={directory}
         onClose={() => setDirectory(false)}
         onVisit={(id) => visit(id, 0)}
-        onExplore={unavailable ? undefined : (id) => { setDirectory(false); setHelp(false); setTravel("walk"); setPlace(id); updateRoute(null); }}
+        onExplore={unavailable ? undefined : (id) => { setDirectory(false); setHelp(false); setTravel("walk"); setPlace(id); setEnterVersion(value => value + 1); updateRoute(null); }}
         visited={visited}
       />
       <Dossier
