@@ -1556,3 +1556,8 @@
 .city-journal-list p { margin: 8px 0 12px; }
 .city-journal-list button { padding: 10px 14px; min-height: 44px; }
 .city-passport:focus-visible { outline: 2px solid #b9e5ce; outline-offset: 4px; border-radius: 6px; }
+
+.city-view-options { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 12px; }
+.city-view-options button { min-height: 44px; padding: 10px 14px; font-size: 12px; }
+.city-view-options button[aria-pressed="true"] { border-color: #b9e5ce; color: #b9e5ce; }
+.city-view-options button:disabled { opacity: 0.45; cursor: default; }

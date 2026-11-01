@@ -79,6 +79,8 @@ export default function CityApp() {
   const [journal, setJournal] = useState(false);
   const [selectedDiscovery, setSelectedDiscovery] = useState<DiscoveryId | null>(null);
   const [discoveries, setDiscoveries] = useState<DiscoveryId[]>([]);
+  const [illustrated, setIllustrated] = useState(true);
+  const [showLabels, setShowLabels] = useState(false);
   const [place, setPlace] = useState<string | null>(null);
   const [living, setLiving] = useState(true);
   const [night, setNight] = useState(false),
@@ -344,6 +346,8 @@ export default function CityApp() {
     }
   }, [waypointDistance < 3.4]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { engine.current?.setLiving(living); }, [ready, living]);
+  useEffect(() => { engine.current?.setIllustrated(illustrated); }, [ready, illustrated]);
+  useEffect(() => { engine.current?.setShowLabels(showLabels); }, [ready, showLabels]);
   const nearby = cityBuildings.find(
     (building) => building.id === snapshot.nearby,
   );
@@ -721,6 +725,11 @@ export default function CityApp() {
         onVisit={(id) => visit(id, 0)}
         onExplore={unavailable ? undefined : (id) => { setDirectory(false); setHelp(false); setTravel("walk"); setPlace(id); setEnterVersion(value => value + 1); updateRoute(null); }}
         visited={visited}
+        illustrated={illustrated}
+        showLabels={showLabels}
+        renderingAvailable={ready && !unavailable}
+        onIllustrated={() => setIllustrated(value => !value)}
+        onLabels={() => setShowLabels(value => !value)}
         onJournal={() => { setDirectory(false); setSelectedDiscovery(null); setJournal(true); }}
       />
       <DiscoveryJournal open={journal} onClose={() => setJournal(false)} found={discoveries} selected={selectedDiscovery} onDiscover={discover} />

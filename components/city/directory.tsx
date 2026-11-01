@@ -10,12 +10,14 @@ export default function CityDirectory({
   onVisit,
   onExplore,
   onJournal,
-  visited,
+  visited, illustrated, showLabels, renderingAvailable, onIllustrated, onLabels,
 }: {
   open: boolean;
   onClose: () => void;
   onVisit: (id: string) => void;
   visited: string[];
+  illustrated: boolean; showLabels: boolean; renderingAvailable: boolean;
+  onIllustrated: () => void; onLabels: () => void;
   onExplore?: (id: string) => void;
   onJournal: () => void;
 }) {
@@ -117,6 +119,10 @@ export default function CityDirectory({
           </button>
         </div>
       )}
+      <div className="city-view-options" role="group" aria-label="World appearance">
+        <button type="button" className="city-secondary" disabled={!renderingAvailable} aria-pressed={illustrated} onClick={onIllustrated}>Illustrated rendering {illustrated ? "On" : "Off"}</button>
+        <button type="button" className="city-secondary" disabled={!renderingAvailable} aria-pressed={showLabels} onClick={onLabels}>Show all building names {showLabels ? "On" : "Off"}</button>
+      </div>
       <button type="button" className="city-secondary" onClick={onJournal}>Open discovery journal</button>
       <p className="directory-note">
         The directory also works when the 3D view is unavailable. Every

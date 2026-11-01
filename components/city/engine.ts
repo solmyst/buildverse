@@ -1,3 +1,5 @@
+import { createIllustrationPass } from "./illustration-pass";
+import { flightDuration, flightProgress } from "@/lib/camera-flight";
 import { createPersonalCourtyard } from "./personal-courtyard";
 import { valleyPlaces } from "@/lib/valley-motion";
 import { createSakuraValley } from "./sakura-valley";
@@ -257,12 +259,20 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
   let pad: CityPoint = { x: 0, z: 0 };
   const keys = new Set<string>();
   const preference = matchMedia("(prefers-reduced-motion: reduce)");
-  let flight: { position: THREE.Vector3; target: THREE.Vector3 } | null = null;
+  let flight: { position: THREE.Vector3; target: THREE.Vector3; startPosition: THREE.Vector3; startTarget: THREE.Vector3; elapsed: number; duration: number; lift: number } | null = null;
   const raycaster = new THREE.Raycaster();
   let press = { x: 0, y: 0 },
     dragged = false,
     lastHover = "";
+  let hoveredBuilding: string | null = null, showLabels = false;
+  function syncNames() {
+    const nearbyId = mode === "street" ? nearestDoor(position)?.id : null;
+    district.blocks.forEach((block, id) => {
+      block.name.visible = showLabels || id === hoveredBuilding || id === nearbyId || (mode === "building" && active?.id === id);
+    });
+  }
   function update() {
+    syncNames();
     options.onUpdate({
       mode,
       position: { ...position },
@@ -328,9 +338,11 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
   function setFlight(point: THREE.Vector3, target: THREE.Vector3) {
     options.onHover("");
     lastHover = "";
+    hoveredBuilding = null;
     controls.enabled = false;
     cameraPulled = false;
-    flight = { position: point, target };
+    const distance = camera.position.distanceTo(point);
+    flight = { position: point, target, startPosition: camera.position.clone(), startTarget: controls.target.clone(), elapsed: 0, duration: flightDuration(distance), lift: Math.min(3, distance * 0.04) };
     if (paused || preference.matches) {
       camera.position.copy(point);
       controls.target.copy(target);
@@ -349,7 +361,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     district.blocks.forEach((block) => {
       block.root.visible = true;
       block.beacon.visible = false;
-      block.name.visible = true;
+      block.name.visible = false;
     });
   }
   function overview() {
@@ -444,27 +456,36 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
       position = { x: active.x, z: active.z + active.depth / 2 + 1.2 };
     walk();
   }
-  // Bloom only runs at night, where emissive windows, lamps and lights glow neon.
-  let composer: EffectComposer | null = null,
-    night = false;
+  // One color pass gives the world an illustrated finish. Bloom is allocated
+  // only when night is first entered, and remains disabled during daylight.
+  let composer: EffectComposer | null = null;
+  let inkPass: ReturnType<typeof createIllustrationPass> | null = null;
+  let bloomPass: UnrealBloomPass | null = null;
+  let illustrated = true, night = false;
   applyTime(0);
-  function bloom() {
+  function effects() {
+    const size = renderer.getSize(new THREE.Vector2());
     if (!composer) {
       composer = new EffectComposer(renderer);
       composer.addPass(new RenderPass(scene, camera));
-      composer.addPass(
-        new UnrealBloomPass(new THREE.Vector2(256, 256), 0.6, 0.45, 0.9),
-      );
+      inkPass = createIllustrationPass();
+      composer.addPass(inkPass);
       composer.addPass(new OutputPass());
-      const size = renderer.getSize(new THREE.Vector2());
       composer.setPixelRatio(renderer.getPixelRatio());
       composer.setSize(size.x, size.y);
     }
+    if (night && !bloomPass) {
+      bloomPass = new UnrealBloomPass(new THREE.Vector2(size.x, size.y), 0.6, 0.45, 0.9);
+      composer.insertPass(bloomPass, 1);
+    }
+    if (bloomPass) bloomPass.enabled = night;
+    inkPass!.enabled = illustrated;
+    inkPass!.uniforms.uResolution.value.copy(size);
     return composer;
   }
   function draw() {
     if (lost) return;
-    if (night) bloom().render();
+    if (illustrated || night) effects().render();
     else renderer.render(scene, camera);
   }
   function frame(time: number) {
@@ -472,19 +493,20 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     const delta = lastTime ? Math.min((time - lastTime) / 1000, 0.1) : 0;
     lastTime = time;
     if (flight) {
-      const smoothing = 1 - Math.exp(-7 * delta);
-      camera.position.lerp(flight.position, smoothing);
-      controls.target.lerp(flight.target, smoothing);
-      if (
-        camera.position.distanceTo(flight.position) < 0.05 &&
-        controls.target.distanceTo(flight.target) < 0.05
-      ) {
+      flight.elapsed += delta;
+      const progress = flightProgress(flight.elapsed, flight.duration);
+      camera.position.lerpVectors(flight.startPosition, flight.position, progress);
+      camera.position.y += Math.sin(progress * Math.PI) * flight.lift;
+      controls.target.lerpVectors(flight.startTarget, flight.target, progress);
+      if (flight.elapsed >= flight.duration) {
         camera.position.copy(flight.position);
         controls.target.copy(flight.target);
         flight = null;
         controls.enabled = !blocked;
+        controls.update();
+      } else {
+        camera.lookAt(controls.target);
       }
-      controls.update();
     }
     const canMove = !blocked && !flight && !paused;
     const raw = {
@@ -758,6 +780,9 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     keys.clear();
     pad = { x: 0, z: 0 };
   }
+  function pointerLeave() {
+    hoveredBuilding = null; lastHover = ""; options.onHover(""); syncNames();
+  }
   function pointerDown(event: PointerEvent) {
     press = { x: event.clientX, y: event.clientY };
     lastDrag = performance.now();
@@ -777,6 +802,8 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     const building = cityBuildings.find(
       (item) => item.id === target?.userData.buildingId,
     );
+    hoveredBuilding = building?.id ?? null;
+    syncNames();
     const text =
       String(target?.userData.action ?? "").startsWith("egg:")
         ? "Inspect this courtyard curiosity"
@@ -834,6 +861,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
   }
   canvas.addEventListener("pointerdown", pointerDown);
   canvas.addEventListener("pointermove", pointerMove);
+  canvas.addEventListener("pointerleave", pointerLeave);
   canvas.addEventListener("click", click);
   canvas.addEventListener("webglcontextlost", contextLost);
   window.addEventListener("keydown", keyDown);
@@ -844,6 +872,8 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
   sync();
   update();
   return {
+    setIllustrated(value: boolean) { illustrated = value; draw(); },
+    setShowLabels(value: boolean) { showLabels = value; syncNames(); draw(); },
     celebrateDiscovery() { courtyard.celebrate(); },
     visitPlace(id: string) {
       const place = valleyPlaces.find(item => item.id === id);
@@ -911,6 +941,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
       controls.dispose();
       canvas.removeEventListener("pointerdown", pointerDown);
       canvas.removeEventListener("pointermove", pointerMove);
+      canvas.removeEventListener("pointerleave", pointerLeave);
       canvas.removeEventListener("click", click);
       canvas.removeEventListener("webglcontextlost", contextLost);
       window.removeEventListener("keydown", keyDown);
@@ -921,6 +952,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
       room?.kit.dispose();
       kit.dispose();
       environment.dispose();
+      composer?.passes.forEach(pass => pass.dispose());
       composer?.dispose();
       renderer.dispose();
     },

@@ -55,3 +55,7 @@ A forested headland frames the northern bay. A propeller plane circles above the
 The previously unassigned central plot at (-8, 8) now holds an open pavilion, benches, planters, a guitar display, a miniature race car, and an arcade cabinet. The directory provides an arrival camera. The three display stands have collision footprints, while the courtyard stays walkable.
 
 Three 3D objects reveal profile details; a classic keyboard sequence unlocks a fourth discovery. The journal is reachable from the desktop passport or the directory on every screen size, and provides keyboard-accessible inspection of the physical objects. Discoveries persist only in session storage, with unknown/duplicate entries rejected. Modal focus and movement blocking use the existing dialog system. No new real-life anecdotes are invented: content uses confirmed hobbies and the existing DSA statistic. Personal incidents can be added once Anush provides them.
+
+## Illustrated rendering and contextual wayfinding
+
+A Messenger reference study informed an original ink-and-paper color pass, quieter rooftop labels, and timed camera arrivals. The directory exposes illustrated rendering and all-label switches. Labels otherwise appear on hover, at nearby doors, and on inspected exteriors. Camera transitions ease over bounded durations with a small lift, respecting reduced-motion and pause settings. See `MESSENGER_DESIGN_STUDY.md` for evidence, coverage limits and implementation choices.
