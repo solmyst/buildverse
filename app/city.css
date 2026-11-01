@@ -1547,7 +1547,7 @@
 }
 
 .city-journal-body { padding: 28px; }
-.city-journal-body h2 { font-size: clamp(1.7rem, 4vw, 2.6rem); line-height: 1.1; margin: 12px 0 20px; }
+.city-journal-body h2 { scroll-margin-top: 80px; font-size: clamp(1.7rem, 4vw, 2.6rem); line-height: 1.1; margin: 12px 0 20px; }
 .city-journal-body p { line-height: 1.7; color: var(--muted); }
 .city-journal-intro { margin: 20px 0; }
 .city-journal-list { display: grid; gap: 16px; list-style: none; padding: 0; }

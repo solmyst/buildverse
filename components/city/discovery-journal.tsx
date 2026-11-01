@@ -8,7 +8,12 @@ export default function DiscoveryJournal({ open, onClose, found, selected, onDis
   onDiscover: (id: string) => void;
 }) {
   const heading = useRef<HTMLHeadingElement>(null);
-  useEffect(() => { if (open && selected) heading.current?.focus(); }, [open, selected]);
+  useEffect(() => {
+    if (open && selected) {
+      heading.current?.focus({ preventScroll: true });
+      heading.current?.scrollIntoView({ block: "start" });
+    }
+  }, [open, selected]);
   const item = discoveryItems.find(entry => entry.id === selected);
   const practice = proofStats.find(stat => stat.label.includes("DSA"));
   return <CityDialog open={open} onClose={onClose} label="Discovery journal" side="dossier">

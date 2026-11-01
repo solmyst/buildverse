@@ -10,7 +10,7 @@ export function createPersonalCourtyard(city: THREE.Group, kit: SceneKit) {
   // Open pavilion: people can walk through the courtyard rather than a solid block.
   for (const x of [-3.8, 3.8]) for (const z of [-3.8, 1.7])
     kit.box(root, [0.14, 3.8, 0.14], [x, 2, z], "#6d7771");
-  const roof = kit.box(root, [8.4, 0.16, 6.2], [0, 4, -1], "#617d73"); roof.rotation.z = -0.035;
+  const roof = kit.box(root, [8.4, 0.16, 2.2], [0, 4, -3], "#617d73"); roof.rotation.z = -0.035;
   kit.label(root, "SOLMYST COURTYARD", [0, 5.1, -1], "#e9d2a3", 8);
   kit.label(root, "GUITAR · RACING · LATE-NIGHT CODE", [0, 3.35, -3.9], "#bce0c9", 7);
   for (const x of [-3.5, 3.5]) {
