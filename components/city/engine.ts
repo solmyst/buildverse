@@ -86,7 +86,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
   controls.maxPolarAngle = Math.PI * 0.47;
   controls.minPolarAngle = 0.18;
   controls.minDistance = 8;
-  controls.maxDistance = 330;
+  controls.maxDistance = Math.max(330, overviewPosition().length() + 20);
   controls.update();
   const ambient = new THREE.HemisphereLight(0xe7f0ef, 0x416373, 2.7);
   scene.add(ambient);
@@ -373,7 +373,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     active = null;
     mode = "overview";
     controls.minDistance = 15;
-    controls.maxDistance = 330;
+    controls.maxDistance = Math.max(330, overviewPosition().length() + 20);
     setFlight(overviewPosition(), new THREE.Vector3(0, 5, 0));
     update();
   }
@@ -721,6 +721,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     renderer.setSize(rect.width, rect.height, false);
     composer?.setSize(rect.width, rect.height);
     if (mode === "overview") {
+      controls.maxDistance = Math.max(330, overviewPosition().length() + 20);
       if (flight) flight.position.copy(overviewPosition());
       else {
         camera.position.copy(overviewPosition());
