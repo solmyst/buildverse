@@ -958,9 +958,11 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
       setFlight(target.clone().add(offset), target);
       update();
     },
-    arrival() {
-      stopActivity();
-      setFlight(new THREE.Vector3(-7, 6, 17), new THREE.Vector3(0, 2, 4));
+    setPreview(value: boolean) {
+      if (value) overview();
+      player.visible = !value && !driving;
+      controls.autoRotate = false;
+      draw();
     },
     overview,
     walk,

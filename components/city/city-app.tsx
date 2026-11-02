@@ -17,7 +17,6 @@ import {
   Play,
   Star,
   Sun,
-  X,
 } from "lucide-react";
 import {
   cityBuildings,
@@ -299,9 +298,10 @@ export default function CityApp() {
     else if (travel === "walk") engine.current?.walk();
     else engine.current?.overview();
   }, [ready, route?.id, route?.floor, travel, enterVersion, place]);
+  const titleScreen = help && !route;
   useEffect(() => {
-    engine.current?.setBlocked(directory || journal || activityMenu || !!route?.reading);
-  }, [ready, directory, journal, activityMenu, route?.reading]);
+    engine.current?.setBlocked(titleScreen || directory || journal || activityMenu || !!route?.reading);
+  }, [ready, titleScreen, directory, journal, activityMenu, route?.reading]);
   useEffect(() => {
     if (ready && activityRequest) engine.current?.startActivity(activityRequest.id);
   }, [ready, activityRequest]);
@@ -311,11 +311,9 @@ export default function CityApp() {
   useEffect(() => {
     engine.current?.setPaused(paused);
   }, [ready, paused]);
-  const titleScreen = help && !route;
   useEffect(() => {
-    engine.current?.setAttract(false);
-    if (titleScreen) engine.current?.arrival();
-  }, [ready, titleScreen, snapshot.mode]);
+    engine.current?.setPreview(titleScreen);
+  }, [ready, titleScreen]);
   useEffect(() => {
     if (!titleScreen) return;
     const start = (event: KeyboardEvent) => {
@@ -375,7 +373,7 @@ export default function CityApp() {
   return (
     <main
       id="main-content"
-      className={`city-app ${ready ? "city-ready" : ""} ${(living ? snapshot.weather?.night : night) ? "city-night" : ""}`}
+      className={`city-app ${titleScreen ? "city-preview" : ""} ${ready ? "city-ready" : ""} ${(living ? snapshot.weather?.night : night) ? "city-night" : ""}`}
       tabIndex={-1}
     >
       <h1 className="sr-only">
@@ -416,7 +414,7 @@ export default function CityApp() {
         <button
           type="button"
           className="city-brand"
-          onClick={goOverview}
+          onClick={() => { if (!titleScreen) goOverview(); }}
           aria-label="Return to city overview"
         >
           <span>
@@ -501,14 +499,6 @@ export default function CityApp() {
       </header>
       {titleScreen && (
         <aside className="city-title" aria-labelledby="city-title-heading">
-          <button
-            type="button"
-            className="city-icon welcome-close"
-            aria-label="Hide title screen"
-            onClick={() => setHelp(false)}
-          >
-            <X size={15} />
-          </button>
           <p className="city-title-eyebrow">ANUSH GUPTA PRESENTS</p>
           <h2 id="city-title-heading" className="city-title-logo">
             <span>BUILD</span>

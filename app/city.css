@@ -1591,3 +1591,12 @@
 .city-recruiter-link { display:inline-block; margin:12px 0; color:#f1d49c; font-size:13px; line-height:1.5; text-decoration:underline; text-underline-offset:4px; }
 .city-quick-portfolio:focus-visible,.city-recruiter-link:focus-visible { outline:3px solid #e8b779; outline-offset:4px; }
 @media(max-width:650px) { .city-quick-label { display:none; } .city-quick-portfolio { padding:6px 8px; font-size:10px; min-height:40px; } }
+
+/* The title is a preview; gameplay controls appear only after entering. */
+.city-preview .city-minimap,
+.city-preview .city-bottom-hud,
+.city-preview .city-activity-launch,
+.city-preview .city-hire,
+.city-preview .city-weather-control,
+.city-preview .city-hover-note,
+.city-preview .city-top-actions > .city-icon { display:none; }
