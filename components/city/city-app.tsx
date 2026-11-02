@@ -484,6 +484,9 @@ export default function CityApp() {
           >
             <Info size={18} />
           </button>
+          <a href="https://anush.tech/" className="city-quick-portfolio" title="Read projects, experience and resume on the quick portfolio">
+            <span className="city-quick-label">Quick </span>Portfolio <ArrowUpRight size={14} />
+          </a>
           <a
             href={personal.resume}
             target="_blank"
@@ -514,6 +517,7 @@ export default function CityApp() {
           <p className="city-title-tagline">
             Fourteen buildings. Nine projects. One city you can walk.
           </p>
+          <a href="https://anush.tech/" className="city-recruiter-link">Short on time? Read my quick portfolio ↗</a>
           <div className="city-title-actions">
             <button type="button" className="city-play" onClick={startJourney}>
               <Play size={18} />

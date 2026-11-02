@@ -1586,3 +1586,8 @@
 .city-activity-menu > button strong { display:block; font-size:18px; margin-bottom:6px; } .city-activity-menu > button span { color:#b2c8c0; font-size:13px; }
 .city-activity-launch:focus-visible,.city-ride-hud button:focus-visible,.city-activity-menu button:focus-visible { outline:3px solid #e0ad69; outline-offset:3px; }
 @media(max-width:650px) { .city-activity-launch { top:105px; right:12px; padding:8px 12px; } .city-ride-hud { bottom:100px; left:12px; padding:16px; } .city-activity-nearby { bottom:150px; } }
+
+.city-quick-portfolio { display:inline-flex; align-items:center; gap:4px; min-height:44px; padding:8px 12px; color:#172f2d; background:#e8d5a7; border-radius:4px; font-size:12px; font-weight:700; text-decoration:none; white-space:nowrap; }
+.city-recruiter-link { display:inline-block; margin:12px 0; color:#f1d49c; font-size:13px; line-height:1.5; text-decoration:underline; text-underline-offset:4px; }
+.city-quick-portfolio:focus-visible,.city-recruiter-link:focus-visible { outline:3px solid #e8b779; outline-offset:4px; }
+@media(max-width:650px) { .city-quick-label { display:none; } .city-quick-portfolio { padding:6px 8px; font-size:10px; min-height:40px; } }

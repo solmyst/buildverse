@@ -49,6 +49,7 @@ export default function CityDirectory({
           an address.
         </h2>
         <p>Choose a building. Take the elevator. Step inside the story.</p>
+        <a href="https://anush.tech/" className="city-recruiter-link">Prefer a quick read? Projects, experience & resume ↗</a>
       </div>
       <div className="directory-controls">
         <label>
