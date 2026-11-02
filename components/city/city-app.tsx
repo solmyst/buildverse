@@ -76,6 +76,7 @@ export default function CityApp() {
   const [directory, setDirectory] = useState(false),
     [help, setHelp] = useState(true),
     [expanded, setExpanded] = useState(false);
+  const [guide, setGuide] = useState(false);
   const [journal, setJournal] = useState(false);
   const [selectedDiscovery, setSelectedDiscovery] = useState<DiscoveryId | null>(null);
   const [discoveries, setDiscoveries] = useState<DiscoveryId[]>([]);
@@ -159,6 +160,11 @@ export default function CityApp() {
     updateRoute(null);
     engine.current?.overview();
   }
+  function startJourney() {
+    goWalking();
+    setBanner(null);
+    setGuide(true);
+  }
   function goWalking() {
     setPlace(null);
     if (!mission) {
@@ -196,7 +202,7 @@ export default function CityApp() {
     enter: visit,
     read: openDossier,
     exit: goWalking,
-    play: goWalking,
+    play: startJourney,
   };
   useEffect(() => {
     const synchronize = () => {
@@ -293,7 +299,8 @@ export default function CityApp() {
   }, [ready, paused]);
   const titleScreen = help && !route;
   useEffect(() => {
-    engine.current?.setAttract(titleScreen && snapshot.mode === "overview");
+    engine.current?.setAttract(false);
+    if (titleScreen) engine.current?.arrival();
   }, [ready, titleScreen, snapshot.mode]);
   useEffect(() => {
     if (!titleScreen) return;
@@ -494,9 +501,9 @@ export default function CityApp() {
             Fourteen buildings. Nine projects. One city you can walk.
           </p>
           <div className="city-title-actions">
-            <button type="button" className="city-play" onClick={goWalking}>
+            <button type="button" className="city-play" onClick={startJourney}>
               <Play size={18} />
-              Play
+              Enter the district
               <kbd>ENTER</kbd>
             </button>
             <button
@@ -528,6 +535,22 @@ export default function CityApp() {
               <kbd>DRAG</kbd>Look
             </li>
           </ul>
+        </aside>
+      )}
+      {guide && !titleScreen && !active && !directory && (
+        <aside className="city-guide" aria-labelledby="guide-heading">
+          <div className="city-guide-avatar" aria-hidden="true">✳</div>
+          <div className="city-guide-copy">
+            <p>YOUR FIRST DAY IN BUILDVERSE <span>01 / ARRIVAL</span></p>
+            <h2 id="guide-heading">Hey, welcome to my little world.</h2>
+            <p>I’m Anush. Every building here is something I’ve built, learned, or am working on. Where should we begin?</p>
+            <div className="city-guide-actions">
+              <button onClick={() => { setGuide(false); visit("interview-ace"); }}>01 · InterviewAce ↗</button>
+              <button onClick={() => { setGuide(false); visit("relay-voice"); }}>02 · AI calling ↗</button>
+              <button onClick={() => { setGuide(false); setPlace("courtyard"); setEnterVersion(v => v + 1); }}>03 · After hours ↗</button>
+              <button className="city-guide-skip" onClick={() => setGuide(false)}>I’ll explore · close guide</button>
+            </div>
+          </div>
         </aside>
       )}
       {active && (

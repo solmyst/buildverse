@@ -4,7 +4,7 @@ Reference: https://messenger.abeto.co/ — public capture on 2 November 2026.
 
 ## What was observed
 
-The opening screen presents a rotating miniature world, illustrated edges, restrained color, oversized title typography, and one prominent Begin action. Browser interaction could not pass the closed-shadow-root entry control, so gameplay and later story flows were not runtime-tested.
+The opening screen presents a rotating miniature world, illustrated edges, restrained color, oversized title typography, and one prominent Begin action. The initial in-app-browser attempt could not pass the closed-shadow-root entry control. A retry in a dedicated Chrome tab successfully entered the public game using ordinary coordinate input. The observations below cover the opening scene and a short walk to Main Square, not the entire game.
 
 The public HTML names two JavaScript assets: `webgl-CS4l6lxD.js` and `App3D-DwM1eiaC.js`. Static inspection identifies Three.js rendering/camera classes, custom outline shader code that accepts color and information textures with depth, normal and ID-related parameters, followed-target/spherical camera fields, and dialogue/quest event handlers. Presence in a shipped bundle does not prove that every feature is executed. The outline code is consistent with the illustrated appearance visible in the opening screen.
 
@@ -31,3 +31,26 @@ A spherical world would require rebuilding terrain, collisions, traffic and floo
 ## Validation
 
 Camera easing has automated boundary, timing, monotonicity and duration tests. Existing movement, collision, content, discoveries, weather and boat tests remain in place. Browser verification covers rendering modes, contextual labels, arrival transitions, night effects and mobile layout. Actual frame rate remains device-dependent; no benchmark equivalence to Messenger is claimed.
+
+## Successful runtime retry — 2 November 2026
+
+Evidence type: direct browser observation through CUA, separate from the retained REA static-analysis records above. No CDP runtime capture or REA execution trace was obtained. Screenshots are saved outside the repository in `../outputs/messenger-runtime-street.png` and `../outputs/messenger-runtime-checklist.png`.
+
+### Observed
+
+- Begin transitions through a hand-drawn envelope loading screen into a close character introduction. Three short dialogue panels establish the delivery task before exploration.
+- The camera changes from the front-facing introduction to a close third-person view. Holding W moves the character along the street while the camera follows; buildings curve and tilt around the miniature world. The precise camera interpolation and terrain implementation remain unknown.
+- Passing a pedestrian produced a brief speech bubble without opening a full dialogue panel. This establishes a lightweight ambient interaction distinct from the opening conversation.
+- A compact checklist button reveals five delivery story lines with individual progress fractions. It closes again to preserve the world view. No quest was completed during this bounded test.
+- The first route mixes a dock, ramps, stairs, overhead walkways, rails, cables, utility boxes, bollards, plants and distinct occupied spaces. Moving into the next area reveals a Main Square title.
+- Outline treatment, flat restrained colors and stylized clouds stay consistent across the intro and street. The character is readable at street scale, while props communicate activity and human scale.
+
+### Buildverse recommendations — design inference
+
+1. Author one strong arrival street linking the visitor spawn to InterviewAce and Relay Voice. Use changing elevation, a footbridge, planted edges and small purposeful props rather than filling every plot with another tower.
+2. Introduce an original guide character with a brief, skippable welcome. Offer three destinations: interview project, AI calling project, and current learning. Keep the directory available for direct access.
+3. Give nearby workers and residents short, factual lines about the city or the associated project. Use authored dialogue initially; an AI service is unnecessary for this effect. Do not invent personal incidents.
+4. Frame important spaces at walking height, then transition to the wider architectural view on request. Maintain readable silhouettes and avoid foreground geometry blocking the avatar.
+5. Turn existing discoveries into a small optional project trail with clear progress and useful project content as the reward. Keep sound opt-in and preserve keyboard-accessible navigation.
+
+The already deployed illustrated rendering, contextual labels and smoother arrivals are original first-pass adaptations. The arrival street, guide and dialogue recommendations are not implemented by this investigation. Exact source reconstruction, full gameplay coverage, audio behavior, mobile controls and measured performance remain unresolved.

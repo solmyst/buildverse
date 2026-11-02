@@ -1,3 +1,4 @@
+import { createArrivalStreet } from "./arrival-street";
 import { createIllustrationPass } from "./illustration-pass";
 import { flightDuration, flightProgress } from "@/lib/camera-flight";
 import { createPersonalCourtyard } from "./personal-courtyard";
@@ -143,6 +144,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
   const hero = createCharacter(kit, heroLook);
   const player = hero.root;
   scene.add(player);
+  createArrivalStreet(city, kit);
   const crowd = createCrowd(city, kit);
   const heroCar = createHeroCar(kit);
   city.add(heroCar.root);
@@ -888,6 +890,9 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
       const offset = (id === "courtyard" ? new THREE.Vector3(14, 8, 6) : new THREE.Vector3(9, 7, 16)).multiplyScalar(Math.max(1, 0.95 / camera.aspect));
       setFlight(target.clone().add(offset), target);
       update();
+    },
+    arrival() {
+      setFlight(new THREE.Vector3(-7, 6, 17), new THREE.Vector3(0, 2, 4));
     },
     overview,
     walk,
