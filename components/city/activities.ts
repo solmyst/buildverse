@@ -80,7 +80,7 @@ export function createActivities(city: THREE.Group, kit: SceneKit, plane: THREE.
       person.copy(boat.localToWorld(new THREE.Vector3(0, -0.25, 1.4)));
     }
     if (passenger && stage === "riding" && (id === "plane" || id === "boat")) {
-      eye.copy(vehicle.localToWorld(new THREE.Vector3(id === "plane" ? 0.55 : 0.65, id === "plane" ? 0.85 : 1.5, 1.3)));
+      eye.copy(vehicle.localToWorld(new THREE.Vector3(id === "plane" ? 0.7 : 0.65, id === "plane" ? 2.4 : 1.7, 1.3)));
       target.set(0, id === "plane" ? 8 : 2, 0);
     }
     return { id, stage, passenger, target, eye, person, heading: id === "boat" ? boat.rotation.y : id === "cinema" ? Math.PI : 0, label: activities.find(a => a.id === id)!.name };
