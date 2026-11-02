@@ -392,7 +392,7 @@ export default function CityApp() {
             a<span>✳</span>
           </span>
           <h2>Opening the district.</h2>
-          <p>Fourteen buildings. A whole portfolio inside.</p>
+          <p>{cityBuildings.length} buildings. A whole portfolio inside.</p>
           <i />
         </div>
       )}
@@ -505,7 +505,7 @@ export default function CityApp() {
             <span>VERSE</span>
           </h2>
           <p className="city-title-tagline">
-            Fourteen buildings. Nine projects. One city you can walk.
+            {cityBuildings.length} buildings. Nine projects. One city you can walk.
           </p>
           <a href="https://anush.tech/" className="city-recruiter-link">Short on time? Read my quick portfolio ↗</a>
           <div className="city-title-actions">

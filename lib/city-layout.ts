@@ -1,5 +1,5 @@
 export type CityKind =
-  "project" | "experience" | "skills" | "about" | "decisions" | "contact";
+  "project" | "experience" | "skills" | "about" | "education" | "decisions" | "contact";
 export type CityBuilding = {
   id: string;
   name: string;
@@ -19,6 +19,11 @@ const projectFloors = [
   "Decisions & tradeoffs",
 ];
 export const cityBuildings: CityBuilding[] = [
+  {
+    id: "jecrc", name: "JECRC / My College Journey", kind: "education",
+    x: 22, z: 22, width: 10, depth: 8, color: "#c17b62", style: "academy",
+    floors: ["2023 / Foundations", "The project lab", "Learning beyond campus", "2027 / Still building"],
+  },
   {
     id: "krate",
     name: "krate Works",

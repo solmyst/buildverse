@@ -41,6 +41,7 @@ export function buildDistrict(parent: THREE.Group, kit: SceneKit) {
       kit.box(entrance, [0.42, 0.4, 0.42], [x, 0.55, 0.25], "#9caa98");
       kit.sphere(entrance, 0.28, [x, 0.92, 0.25], "#527b62");
     }
+    if (building.id === "jecrc") kit.label(root, "JECRC UNIVERSITY", [0, 3.55, 1.05], "#f0dbaf", 3.5);
     glasses.push(landmark.glass);
     const roof = 0.5 + building.floors.length * floorHeight;
     const name = kit.label(root, building.name, [0, roof + 4.3, 0], building.color, 8);

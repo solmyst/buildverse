@@ -3,8 +3,9 @@ import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js
 import { type CityBuilding, floorHeight } from "@/lib/city-layout";
 import type { SceneKit } from "./scene-kit";
 
-export type Architecture = "interlock" | "pagoda" | "ribbon" | "origami" | "capsule" | "bridge" | "helix" | "speed" | "gateway" | "orbit" | "dune" | "pixels" | "library" | "lotus";
+export type Architecture = "interlock" | "pagoda" | "ribbon" | "origami" | "capsule" | "bridge" | "helix" | "speed" | "gateway" | "orbit" | "dune" | "pixels" | "library" | "lotus" | "campus";
 export const landmarkStyles: Record<string, Architecture> = {
+  jecrc: "campus",
   krate: "interlock", "interview-ace": "pagoda", "relay-voice": "ribbon",
   "resume-tailor": "origami", memeforge: "capsule", experience: "bridge",
   skills: "helix", "f1-dashboard": "speed", "trip-helper": "gateway",
@@ -77,7 +78,32 @@ export function createLandmark(kit: SceneKit, root: THREE.Group, b: CityBuilding
     root.add(level);
     levels.push(level);
     const t = floor / Math.max(1, n - 1);
-    if (["ribbon", "helix", "orbit", "dune", "lotus"].includes(style)) {
+    if (style === "campus") {
+      // Red-brick academic wings, cream bridge and recessed glazing from the supplied campus photos.
+      for (const side of [-1, 1]) {
+        box(level, [3.2, 3.05, 6.4], [side * 3.4, 1.55, -0.5], "#b5664e");
+        box(level, [3.3, 0.12, 6.5], [side * 3.4, 0.1, -0.5], ivory);
+        for (const x of [-0.95, 0, 0.95]) for (const z of [-3.73, 2.73]) {
+          box(level, [0.5, 1.05, 0.07], [side * 3.4 + x, 1.65, z], dark, "glass");
+          box(level, [0.65, 0.09, 0.14], [side * 3.4 + x, 1.08, z], ivory);
+        }
+        for (const z of [-2.5, -0.7, 1.1])
+          box(level, [0.06, 1.05, 0.55], [side * 5.03, 1.65, z], dark, "glass");
+        // Fine mortar courses keep the brick legible without a heavy texture download.
+        for (let row = 0; row < 6; row++)
+          box(level, [3.2, 0.025, 0.025], [side * 3.4, 0.45 + row * 0.45, 2.72], "#c78b70");
+      }
+      box(level, [3.6, 2.9, 3.5], [0, 1.5, -1], floor === 1 || floor === 2 ? ivory : "#b5664e");
+      if (floor === 0) {
+        box(level, [3.25, 2.7, 0.09], [0, 1.4, 0.81], dark, "glass");
+        for (const x of [-1.1, 0, 1.1]) box(level, [0.07, 2.8, 0.14], [x, 1.45, 0.87], ivory);
+      } else for (const x of [-1.1, 0, 1.1])
+        box(level, [0.4, 0.9, 0.1], [x, 1.6, 0.8], dark, "glass");
+      if (floor === n - 1) {
+        for (const x of [-4.7, -2.1, 2.1, 4.7]) box(level, [0.18, 0.7, 6.5], [x, 3.3, -0.5], "#b5664e");
+        box(level, [10.2, 0.15, 6.7], [0, 3.1, -0.5], ivory);
+      }
+    } else if (["ribbon", "helix", "orbit", "dune", "lotus"].includes(style)) {
       const radius = w * (style === "helix" ? 0.41 : style === "dune" ? 0.48 - t * 0.1 : 0.43);
       const shell = disc(level, radius, 2.85, 1.5, dark);
       shell.material = glass;
@@ -218,6 +244,25 @@ export function createLandmark(kit: SceneKit, root: THREE.Group, b: CityBuilding
   }
   // Merge static architecture by finish *within each floor*. This retains
   // floor-level ray picking while avoiding a draw call for every facade fin.
+  if (style === "campus") {
+    box(root, [10.8, 0.08, 3.3], [0, 0.45, 3.9], "#8fa67b");
+    box(root, [2, 0.1, 3.7], [0, 0.52, 4], ivory);
+    for (const x of [-2.8, 2.8]) {
+      box(root, [2, 0.22, 1.1], [x, 0.58, 3.8], "#c4c7ae");
+      box(root, [1.7, 0.05, 0.8], [x, 0.71, 3.8], "#57999a", "glass");
+      for (const dx of [-0.5, 0, 0.5]) kit.cylinder(root, 0.025, 0.45, [x + dx, 0.95, 3.8], "#b6dfdc", 8);
+    }
+    for (const x of [-1.4, 1.4]) box(root, [0.3, 3, 0.45], [x, 1.7, 5.1], "#b5664e");
+    box(root, [3.3, 0.25, 0.6], [0, 3.25, 5.1], ivory);
+    for (const side of [-1, 1]) for (let i = 0; i < 9; i++) {
+      const x = side * (1.8 + i * 0.38);
+      box(root, [0.035, 1.4, 0.04], [x, 1.1, 5.1], "#334d4a", "metal");
+    }
+    for (const x of [-5, 5]) {
+      box(root, [0.7, 0.4, 0.7], [x, 0.7, 4], ivory);
+      kit.sphere(root, 0.45, [x, 1.2, 4], "#638665");
+    }
+  }
   for (const level of levels) {
     level.updateWorldMatrix(true, true);
     const inverse = level.matrixWorld.clone().invert();

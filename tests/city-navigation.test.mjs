@@ -43,7 +43,7 @@ test("the city gives each project its own building and houses the whole portfoli
     new Set(cityBuildings.map((building) => building.id)).size,
     cityBuildings.length,
   );
-  for (const kind of ["experience", "skills", "about", "decisions", "contact"])
+  for (const kind of ["experience", "skills", "about", "education", "decisions", "contact"])
     assert.ok(cityBuildings.some((building) => building.kind === kind));
   assert.ok(cityBuildings.every((building) => building.floors.length > 0));
 });
@@ -146,7 +146,7 @@ test("every physical floor resolves real written content", () => {
         `${building.id}/${floor}: link`,
       );
     }
-  assert.equal(floorCount, 50);
+  assert.equal(floorCount, 54);
 });
 test("project floors separate the problem, implementation, and decisions", () => {
   const interview = cityBuildings.find(
@@ -214,4 +214,21 @@ test("island landmarks block walking like buildings do", () => {
   for (const prop of cityProps) assert.ok(isBlocked({ x: prop.x, z: prop.z }, 0));
   const edge = moveCitizen({ x: islandEdge - 0.1, z: 0 }, { x: 1, z: 0 }, 0.2, 11);
   assert.ok(edge.x <= islandEdge);
+});
+
+test("JECRC has a reachable entrance and four distinct, linked education chapters", () => {
+  const campus = cityBuildings.find(building => building.id === "jecrc");
+  assert.equal(campus.kind, "education");
+  assert.equal(campus.floors.length, 4);
+  const entrance = doorPoint(campus.id);
+  assert.equal(isBlocked(entrance, 0.45), false);
+  assert.equal(nearestDoor(entrance)?.id, "jecrc");
+  const chapters = campus.floors.map((_, floor) => {
+    const route = { id: campus.id, floor, reading: true };
+    assert.deepEqual(parseCityRoute(cityRoute(route)), route);
+    const content = floorContent(campus, floor);
+    assert.ok(content.links.some(link => link.href === "https://jecrcuniversity.edu.in/"));
+    return content.sections[0].heading;
+  });
+  assert.equal(new Set(chapters).size, 4);
 });
