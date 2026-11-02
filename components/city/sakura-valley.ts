@@ -40,7 +40,7 @@ export function createSakuraValley(city: THREE.Group, scene: THREE.Scene, kit: S
   const dummy = new THREE.Object3D();
 
   // A cozy outdoor coding/anime-inspired cinema on the southern lawn.
-  const cinema = new THREE.Group(); cinema.position.set(-23, 0, 34); city.add(cinema);
+  const cinema = new THREE.Group(); cinema.userData.action = "ride:cinema"; cinema.position.set(-23, 0, 34); city.add(cinema);
   kit.box(cinema, [13, 0.08, 9], [0, 0.12, 0], "#789382");
   for (const x of [-4.6, 4.6]) kit.box(cinema, [0.18, 6, 0.18], [x, 3, -3.6], "#52646a");
   kit.box(cinema, [9.6, 5.1, 0.24], [0, 4.0, -3.6], "#263f49");
@@ -155,5 +155,5 @@ export function createSakuraValley(city: THREE.Group, scene: THREE.Scene, kit: S
     }
   }
   update(0);
-  return { update };
+  return { update, plane, boat: boats[0] };
 }

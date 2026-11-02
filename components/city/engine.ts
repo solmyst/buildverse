@@ -1,3 +1,5 @@
+import { createActivities } from "./activities";
+import { nearestActivity, type ActivityId } from "@/lib/city-activities";
 import { createArrivalStreet } from "./arrival-street";
 import { createIllustrationPass } from "./illustration-pass";
 import { flightDuration, flightProgress } from "@/lib/camera-flight";
@@ -43,10 +45,13 @@ export type CitySnapshot = {
   driving: boolean;
   nearCar: boolean;
   car: CarState;
+  activity?: { id: ActivityId; stage: "calling" | "ready" | "riding"; passenger?: boolean } | null;
+  nearbyActivity?: ActivityId | null;
   weather?: ReturnType<typeof cityWeather>;
 };
 type Options = {
   onEnter: (id: string, floor: number) => void;
+  onActivity: (id: ActivityId) => void;
   onRead: () => void;
   onDiscover: (id: string) => void;
   onExit: () => void;
@@ -232,6 +237,9 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
   const courtyard = createPersonalCourtyard(city, kit);
   const sakuraValley = createSakuraValley(city, scene, kit);
   const weatherView = createWeather(scene, kit);
+  const rides = createActivities(city, kit, sakuraValley.plane, sakuraValley.boat, island.gondola);
+  let activity: { id: ActivityId; stage: "calling" | "ready" | "riding"; passenger?: boolean } | null = null;
+  let returnPosition: CityPoint | null = null;
   let living = true, worldSeconds = 0;
   // Time of day: 0 is noon, 1 is night; toggling sweeps through a sunset.
   let timeOfDay = 0,
@@ -277,7 +285,9 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     syncNames();
     options.onUpdate({
       mode,
-      position: { ...position },
+      activity,
+      nearbyActivity: mode === "street" && !activity ? nearestActivity(position.x, position.z) : null,
+      position: activity ? { x: player.position.x, z: player.position.z } : { ...position },
       nearby:
         mode === "room"
           ? (active?.id ?? null)
@@ -288,7 +298,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
       ),
       sprinting,
       driving,
-      nearCar: !driving && carDistance() < 3.4,
+      nearCar: !activity && !driving && carDistance() < 3.4,
       car: { ...carState },
       weather: living ? cityWeather(worldSeconds) : undefined,
     });
@@ -311,6 +321,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     player.rotation.y = carState.heading;
   }
   function toggleCar() {
+    if (activity) return;
     if (blocked || flight || mode === "room") return;
     if (driving) parkHero();
     else if (carDistance() < 3.4) {
@@ -366,7 +377,29 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
       block.name.visible = false;
     });
   }
+  function stopActivity() {
+    if (!activity) return;
+    activity = null; rides.stop();
+    if (returnPosition) position = { ...returnPosition };
+    returnPosition = null;
+    player.visible = true; player.rotation.set(0, 0, 0);
+    player.position.set(position.x, groundY, position.z);
+    hero.animate(0, 0);
+    controls.enabled = !blocked;
+    controls.minDistance = 5; controls.maxDistance = 32;
+    keys.clear(); pad = { x: 0, z: 0 };
+  }
+  function startActivity(id: ActivityId) {
+    stopActivity();
+    walk();
+    returnPosition = { ...position };
+    activity = { id, stage: id === "plane" || id === "boat" ? "calling" : "riding" };
+    rides.start(id); flight = null; controls.enabled = false;
+    keys.clear(); pad = { x: 0, z: 0 };
+    update();
+  }
   function overview() {
+    stopActivity();
     parkHero();
     if (active && room)
       position = { x: active.x, z: active.z + active.depth / 2 + 1.2 };
@@ -380,6 +413,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     update();
   }
   function walk() {
+    stopActivity();
     parkHero();
     // Leaving a door: face the street and frame the hero from the front-side.
     const exiting = !!active;
@@ -406,6 +440,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     update();
   }
   function inspect(id: string) {
+    stopActivity();
     parkHero();
     const building = cityBuildings.find((item) => item.id === id);
     if (!building) return;
@@ -427,6 +462,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     update();
   }
   function enter(id: string, floor: number) {
+    stopActivity();
     parkHero();
     const building = cityBuildings.find((item) => item.id === id);
     if (!building || floor < 0 || floor >= building.floors.length) return;
@@ -510,7 +546,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
         camera.lookAt(controls.target);
       }
     }
-    const canMove = !blocked && !flight && !paused;
+    const canMove = !activity && !blocked && !flight && !paused;
     const raw = {
       x:
         pad.x +
@@ -692,8 +728,22 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     } else if (!blocked) {
       crowd.update(0, elapsed, position, false);
     }
+    if (activity) {
+      const ride = rides.update(!paused && !blocked && !preference.matches ? delta : 0, preference.matches && !paused && !blocked);
+      if (ride) {
+        activity = { id: ride.id, stage: ride.stage, passenger: ride.passenger };
+        controls.enabled = false;
+        const smoothing = 1 - Math.exp(-3 * delta);
+        camera.position.lerp(ride.eye, smoothing);
+        controls.target.lerp(ride.target, smoothing);
+        camera.lookAt(controls.target);
+        player.visible = !(ride.id === "plane" && ride.stage === "riding");
+        player.position.copy(ride.person); player.rotation.set(0, ride.heading, 0);
+        hero.legs.forEach(({ hip, knee }) => { hip.rotation.x = ride.stage === "riding" ? -Math.PI / 2 : 0; knee.rotation.x = ride.stage === "riding" ? Math.PI / 2 : 0; });
+      }
+    }
     if (!flight && controls.enabled) controls.update();
-    if (mode === "street" && !flight) avoidWalls();
+    if (mode === "street" && !flight && !activity) avoidWalls();
     draw();
     if (time - lastEmit > 180) {
       lastEmit = time;
@@ -748,6 +798,15 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     )
       return;
     const key = event.key.toLowerCase();
+    if (activity) {
+      if (key === "escape") { stopActivity(); walk(); update(); }
+      if (key === "e" && !event.repeat) rides.board();
+      return;
+    }
+    if (key === "e" && !event.repeat && mode === "street" && !driving) {
+      const nearby = nearestActivity(position.x, position.z);
+      if (nearby) { options.onActivity(nearby); return; }
+    }
     // Space still activates a focused button.
     if (key === " " && (event.target as HTMLElement)?.closest("button,a")) return;
     if (
@@ -808,7 +867,9 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     hoveredBuilding = building?.id ?? null;
     syncNames();
     const text =
-      String(target?.userData.action ?? "").startsWith("egg:")
+      String(target?.userData.action ?? "").startsWith("ride:")
+        ? "Take a seat · start activity"
+        : String(target?.userData.action ?? "").startsWith("egg:")
         ? "Inspect this courtyard curiosity"
         : target?.userData.action === "read"
         ? "Open this floor’s dossier"
@@ -850,7 +911,8 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     let object: THREE.Object3D | null = hit.object;
     while (object && !object.userData.buildingId && !object.userData.action)
       object = object.parent;
-    if (String(object?.userData.action ?? "").startsWith("egg:")) options.onDiscover(object!.userData.action.slice(4));
+    if (String(object?.userData.action ?? "").startsWith("ride:")) options.onActivity(object!.userData.action.slice(5));
+    else if (String(object?.userData.action ?? "").startsWith("egg:")) options.onDiscover(object!.userData.action.slice(4));
     else if (object?.userData.action === "read") options.onRead();
     else if (object?.userData.action === "exit") options.onExit();
     else if (object?.userData.buildingId)
@@ -875,10 +937,15 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
   sync();
   update();
   return {
+    startActivity,
+    toggleActivityView() { rides.toggleView(); update(); },
+    boardActivity() { rides.board(); update(); },
+    leaveActivity() { stopActivity(); walk(); update(); },
     setIllustrated(value: boolean) { illustrated = value; draw(); },
     setShowLabels(value: boolean) { showLabels = value; syncNames(); draw(); },
     celebrateDiscovery() { courtyard.celebrate(); },
     visitPlace(id: string) {
+      stopActivity();
       const place = valleyPlaces.find(item => item.id === id);
       if (!place) return;
       parkHero(); clearRoom(); active = null; mode = "street";
@@ -892,6 +959,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
       update();
     },
     arrival() {
+      stopActivity();
       setFlight(new THREE.Vector3(-7, 6, 17), new THREE.Vector3(0, 2, 4));
     },
     overview,
@@ -913,7 +981,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     },
     setBlocked(value: boolean) {
       blocked = value;
-      controls.enabled = !value && !flight;
+      controls.enabled = !value && !flight && !activity;
       blur();
     },
     setPaused(value: boolean) {

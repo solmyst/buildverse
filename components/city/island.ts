@@ -98,6 +98,7 @@ export function buildIsland(city: THREE.Group, scene: THREE.Scene, kit: SceneKit
   const ferrisProp = cityProps.find((prop) => prop.id === "ferris-wheel")!;
   const ferris = new THREE.Group();
   ferris.position.set(ferrisProp.x, 0, ferrisProp.z);
+  ferris.userData.action = "ride:ferris";
   city.add(ferris);
   for (const x of [-1.6, 1.6])
     for (const z of [-0.9, 0.9]) {
@@ -125,8 +126,10 @@ export function buildIsland(city: THREE.Group, scene: THREE.Scene, kit: SceneKit
     const gondola = new THREE.Group();
     gondola.position.set(Math.cos(angle) * 6, Math.sin(angle) * 6, 0);
     wheel.add(gondola);
-    kit.box(gondola, [0.9, 0.8, 0.8], [0, -0.75, 0], bulbs[i % 4]);
-    kit.box(gondola, [0.95, 0.1, 0.85], [0, -0.3, 0], "#1d2b33");
+    kit.box(gondola, [0.9, 0.12, 0.8], [0, -1.05, 0], bulbs[i % 4]);
+    kit.box(gondola, [0.9, 0.5, 0.1], [0, -0.8, 0.35], bulbs[i % 4]);
+    for (const x of [-0.4, 0.4]) kit.box(gondola, [0.08, 1.2, 0.08], [x, -0.45, 0.3], "#d9e2df");
+    kit.box(gondola, [0.95, 0.1, 0.85], [0, 0.15, 0], "#1d2b33");
     gondolas.push(gondola);
   }
   kit.cylinder(wheel, 0.35, 1.4, [0, 0, 0], "#1d2b33", 16).rotation.x = Math.PI / 2;
@@ -169,6 +172,7 @@ export function buildIsland(city: THREE.Group, scene: THREE.Scene, kit: SceneKit
       for (const gondola of gondolas) gondola.rotation.z = -wheel.rotation.z;
       beamPivot.rotation.y = elapsed * 0.8;
     },
+    gondola: gondolas[9],
     setNight(value: boolean) {
       beamPivot.visible = value;
     },

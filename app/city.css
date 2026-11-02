@@ -1574,3 +1574,15 @@
 .city-guide-actions .city-guide-skip { background:transparent; color:#36564d; border-color:transparent; }
 .city-guide-actions button:focus-visible { outline:3px solid #c37b51; outline-offset:3px; }
 @media(max-width:650px) { .city-guide { bottom:90px; padding:16px; gap:12px; } .city-guide-avatar { width:35px; height:48px; font-size:25px; } .city-guide-copy h2 { font-size:20px; } .city-guide-copy > p:first-child span { display:none; } .city-guide-actions { gap:5px; margin-top:12px; } .city-guide-actions button { padding:8px; } }
+
+.city-activity-launch { position:absolute; right:24px; top:125px; z-index:26; padding:12px 18px; min-height:44px; color:#fff0d1; background:#284e47; border:1px solid #8ea89b; border-radius:4px; cursor:pointer; }
+.city-ride-hud { position:absolute; z-index:30; left:24px; bottom:105px; width:min(360px,calc(100% - 48px)); padding:22px; color:#243e37; background:#f3efdf; border:1px solid #aeb49b; border-radius:4px; }
+.city-ride-hud small,.city-activity-menu > small { font-size:10px; letter-spacing:1.5px; color:#667a69; }
+.city-ride-hud h2 { margin:10px 0; font-size:24px; } .city-ride-hud p { font-size:13px; line-height:1.5; }
+.city-ride-hud button,.city-activity-nearby { min-height:44px; padding:10px 16px; margin:10px 8px 0 0; border:1px solid #55796a; background:#284e47; color:#fff0d1; border-radius:3px; cursor:pointer; }
+.city-activity-nearby { position:absolute; z-index:26; bottom:90px; left:50%; transform:translateX(-50%); }
+.city-activity-menu { padding:28px; } .city-activity-menu h2 { font-size:32px; margin:14px 0; } .city-activity-menu > p { line-height:1.6; color:#b2c8c0; }
+.city-activity-menu > button { display:block; width:100%; text-align:left; padding:18px 0; border:0; border-bottom:1px solid #66877655; background:transparent; color:#f0dfba; cursor:pointer; }
+.city-activity-menu > button strong { display:block; font-size:18px; margin-bottom:6px; } .city-activity-menu > button span { color:#b2c8c0; font-size:13px; }
+.city-activity-launch:focus-visible,.city-ride-hud button:focus-visible,.city-activity-menu button:focus-visible { outline:3px solid #e0ad69; outline-offset:3px; }
+@media(max-width:650px) { .city-activity-launch { top:105px; right:12px; padding:8px 12px; } .city-ride-hud { bottom:100px; left:12px; padding:16px; } .city-activity-nearby { bottom:150px; } }

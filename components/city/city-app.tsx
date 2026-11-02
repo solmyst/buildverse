@@ -32,6 +32,8 @@ import type { createCity, CitySnapshot } from "./engine";
 import DiscoveryJournal from "./discovery-journal";
 import { isDiscovery, restoreDiscoveries, advanceSecret, type DiscoveryId } from "@/lib/city-discoveries";
 import CityDirectory from "./directory";
+import CityDialog from "./dialog";
+import { activities, type ActivityId } from "@/lib/city-activities";
 import Dossier from "./dossier";
 import CityMinimap from "./minimap";
 import DirectionPad from "./dpad";
@@ -56,12 +58,14 @@ export default function CityApp() {
   const canvas = useRef<HTMLCanvasElement>(null);
   const engine = useRef<ReturnType<typeof createCity>>();
   const actions = useRef<{
+    activity: (id: ActivityId) => void;
     enter: (id: string, floor: number) => void;
     discover: (id: string) => void;
     read: () => void;
     exit: () => void;
     play: () => void;
   }>({
+    activity: () => {},
     enter: () => {},
     discover: () => {},
     read: () => {},
@@ -76,6 +80,8 @@ export default function CityApp() {
   const [directory, setDirectory] = useState(false),
     [help, setHelp] = useState(true),
     [expanded, setExpanded] = useState(false);
+  const [activityMenu, setActivityMenu] = useState(false);
+  const [activityRequest, setActivityRequest] = useState<{ id: ActivityId } | null>(null);
   const [guide, setGuide] = useState(false);
   const [journal, setJournal] = useState(false);
   const [selectedDiscovery, setSelectedDiscovery] = useState<DiscoveryId | null>(null);
@@ -160,6 +166,9 @@ export default function CityApp() {
     updateRoute(null);
     engine.current?.overview();
   }
+  function launchActivity(id: ActivityId) {
+    setActivityMenu(false); setGuide(false); goWalking(); setBanner(null); setActivityRequest({ id });
+  }
   function startJourney() {
     goWalking();
     setBanner(null);
@@ -199,6 +208,7 @@ export default function CityApp() {
   }, []);
   actions.current = {
     discover,
+    activity: launchActivity,
     enter: visit,
     read: openDossier,
     exit: goWalking,
@@ -254,6 +264,7 @@ export default function CityApp() {
         try {
           engine.current = createCity(canvas.current!, {
             onEnter: (id, level) => actions.current.enter(id, level),
+            onActivity: (id) => actions.current.activity(id),
             onRead: () => actions.current.read(),
             onDiscover: (id) => actions.current.discover(id),
             onExit: () => actions.current.exit(),
@@ -289,8 +300,11 @@ export default function CityApp() {
     else engine.current?.overview();
   }, [ready, route?.id, route?.floor, travel, enterVersion, place]);
   useEffect(() => {
-    engine.current?.setBlocked(directory || journal || !!route?.reading);
-  }, [ready, directory, journal, route?.reading]);
+    engine.current?.setBlocked(directory || journal || activityMenu || !!route?.reading);
+  }, [ready, directory, journal, activityMenu, route?.reading]);
+  useEffect(() => {
+    if (ready && activityRequest) engine.current?.startActivity(activityRequest.id);
+  }, [ready, activityRequest]);
   useEffect(() => {
     engine.current?.setNight(night);
   }, [ready, night]);
@@ -333,7 +347,7 @@ export default function CityApp() {
   }, [ready, route, waypoint?.x, waypoint?.z]); // eslint-disable-line react-hooks/exhaustive-deps
   // Fires once each time the visitor arrives at the current waypoint.
   useEffect(() => {
-    if (!currentMission || !mission || waypointDistance > 3.4) return;
+    if (snapshot.activity || !currentMission || !mission || waypointDistance > 3.4) return;
     const next = mission.stop + 1;
     if (next < currentMission.stops.length) {
       setMission({ index: mission.index, stop: next });
@@ -634,7 +648,7 @@ export default function CityApp() {
         waypoint={route ? null : waypoint}
         onOpen={() => setDirectory(true)}
       />
-      {currentMission && mission && !titleScreen && !route && (
+      {currentMission && mission && !snapshot.activity && !titleScreen && !route && (
         <div className="city-objective" role="status">
           <small>
             MISSION {mission.index + 1}/{cityMissions.length}
@@ -651,7 +665,7 @@ export default function CityApp() {
           />
         </div>
       )}
-      {(snapshot.mode === "street" || snapshot.mode === "room") && (
+      {!snapshot.activity && (snapshot.mode === "street" || snapshot.mode === "room") && (
         <DirectionPad onMove={(point) => engine.current?.setMovement(point)} />
       )}
       <div
@@ -704,7 +718,7 @@ export default function CityApp() {
           </button>
         </div>
         <div className="city-interact">
-          {snapshot.driving ? (
+          {snapshot.activity ? <span>{snapshot.activity.stage === "riding" ? "SEATED" : "AT THE DOCK"} · ESC TO RETURN TO THE STREET</span> : snapshot.driving ? (
             <button type="button" onClick={() => engine.current?.toggleCar()}>
               <kbd>F</kbd>Exit car
               <span className="city-interact-hint">
@@ -742,6 +756,32 @@ export default function CityApp() {
           <p>ADDRESSES · {discoveries.length}/4 SECRETS</p>
         </button>
       </footer>
+      <button className="city-activity-launch" type="button" onClick={() => setActivityMenu(true)}>✳ Things to do</button>
+      {snapshot.nearbyActivity && !snapshot.activity && !titleScreen && !route && (
+        <button className="city-activity-nearby" type="button" onClick={() => { launchActivity(snapshot.nearbyActivity!); }}>
+          <kbd>E</kbd> {activities.find(a => a.id === snapshot.nearbyActivity)?.name}
+        </button>
+      )}
+      {snapshot.activity && (
+        <aside className="city-ride-hud" aria-label="Current activity">
+          <small>{snapshot.activity.stage === "calling" ? "ON THE WAY TO YOUR DOCK" : snapshot.activity.stage === "ready" ? "READY TO BOARD" : "TAKE A MOMENT. ENJOY THE VIEW."}</small>
+          <h2>{snapshot.activity.stage === "riding" && snapshot.activity.id === "plane" ? "Sightseeing flight" : snapshot.activity.stage === "riding" && snapshot.activity.id === "boat" ? "Coastal cruise" : activities.find(a => a.id === snapshot.activity?.id)?.name}</h2>
+          <p>{snapshot.activity.stage === "calling" ? "Your ride is approaching. It will be ready in a few seconds." : snapshot.activity.stage === "ready" ? "Your ride has arrived. Hop aboard when you’re ready." : snapshot.activity.id === "cinema" ? "An original animated landscape and coding reel, playing on the outdoor screen." : "You’re seated. Leave whenever you like to return to your starting point."}</p>
+          {snapshot.activity.stage === "ready" && <button type="button" onClick={() => engine.current?.boardActivity()}>Board {snapshot.activity.id} · E</button>}
+          {snapshot.activity.stage === "riding" && (snapshot.activity.id === "plane" || snapshot.activity.id === "boat") && <button type="button" aria-pressed={!!snapshot.activity.passenger} onClick={() => engine.current?.toggleActivityView()}>{snapshot.activity.passenger ? "Outside view" : "View from seat"}</button>}
+          <button type="button" onClick={() => engine.current?.leaveActivity()}>{snapshot.activity.stage === "riding" ? "Leave activity" : "Cancel pickup"} · Esc</button>
+        </aside>
+      )}
+      <CityDialog open={activityMenu} onClose={() => setActivityMenu(false)} label="Things to do in Buildverse" side="directory">
+        <div className="city-activity-menu">
+          <small>AFTER HOURS / MAKE YOURSELF AT HOME</small>
+          <h2>A city you can live in.</h2>
+          <p>Pick a place to take a seat. Plane and boat pickups arrive at the waterfront dock before you board.</p>
+          {activities.map(item => <button type="button" key={item.id} onClick={() => {
+            launchActivity(item.id);
+          }}><strong>{item.name} ↗</strong><span>{item.detail}</span></button>)}
+        </div>
+      </CityDialog>
       <CityDirectory
         open={directory}
         onClose={() => setDirectory(false)}
