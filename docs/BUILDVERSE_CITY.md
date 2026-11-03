@@ -34,7 +34,7 @@ Three.js reference: https://threejs.org/docs/pages/OrbitControls.html and https:
 
 Each address has its own massing: interlocked workshop volumes, curved-eave studios, ribbon tower, folded atelier, offset capsules, twin-pier headquarters, helical academy, aerodynamic garage, timber gateway, orbital observatory, dune terraces, pixel clusters, tiered library, and lotus terminal. The roofs are original generated meshes inspired by East Asian architectural forms. All 50 content floors retain their own picking identity after static facade meshes are batched by material.
 
-Rounded edges, smooth cylinders, procedural roughness, distinct stone/wood/metal/glass materials, and a locally generated environment map improve surface quality. Rendering targets 60 frames per second with time-based camera easing and damped orbit/zoom. Desktop pixel ratio is capped at 2 and mobile at 1.75; actual frame rate depends on the device. A pond, curved footbridge, bamboo, and blossom trees frame the district.
+Rounded edges, smooth cylinders, procedural roughness, distinct stone/wood/metal/glass materials, and a locally generated environment map improve surface quality. Rendering targets 60 frames per second with time-based camera easing and damped orbit/zoom. Pixel ratio, shadows and the ink pass follow the quality tier (`lib/render-quality.ts`): high 2, medium 1.5, low 1. Narrow screens start at medium, and Auto drops a tier when frame rate stays under 40 fps. A pond, curved footbridge, bamboo, and blossom trees frame the district.
 
 Rendering references: https://threejs.org/docs/pages/WebGLRenderer.html and https://threejs.org/docs/pages/RoomEnvironment.html.
 

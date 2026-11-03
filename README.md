@@ -1,65 +1,113 @@
-# 🧪 PROJECT: SOL-MYST // ANUSH GUPTA ARTIFACT
-### Status: [ CLASSIFIED ] // TYPE: COGNITOHAZARD
+# Buildverse City
 
-> "If you're reading this, you've successfully bypassed the terminal firewalls. Welcome to the brain-dump of a product manager and engineering student who thinks in funnels, builds in code, and measures in outcomes. God help us all."
+A portfolio you drive through. Each of my nine projects is a building in a
+procedurally modelled 3D island city, and every floor tells one part of its
+story: the problem and outcome, the engineering, and the decisions.
 
----
+**Live:** [buildverse.anush.tech](https://buildverse.anush.tech) ·
+**Short on time?** Press *Watch the 60-second autopilot tour* on the title screen.
 
-## ☣️ WARNING: UN-CANON LORE
-This repository does not exist in your timeline. It is a temporal anchor built using **Next.js 14** and **Pure concentrated caffeine**. Any attempt to clone this repo may result in:
-1. Spontaneous generation of Jira tickets in your sleep.
-2. A sudden, inexplicable urge to talk about "Product-Market Fit" at family dinners.
-3. Your computer fans playing the *The Last of Us* theme on loop.
+![Buildverse City share card](https://buildverse.anush.tech/og.png)
 
----
+## For recruiters
 
-## 🛠️ THE ARSENAL (Tech Stack)
-We don't use "frameworks." We use **Survival Kits**:
-- **Next.js 14**: Static export with React 18 and TypeScript.
-- **Tailwind CSS**: Rapid styling for when the clickers are chasing you.
-- **Framer Motion**: Ensuring the UI slides smoother than a PM sliding into your DMs.
-- **GitHub Pages**: Hosts the static site at buildverse.anush.tech. This portfolio has no backend or AI service dependency.
+- **60-second autopilot tour:** the camera flies through six stops (about me,
+  three flagship projects, skills, contact) and ends on a Hire card with email,
+  resume, LinkedIn and GitHub.
+- **Directory:** a searchable list of every address, projects first. It also
+  works when WebGL is unavailable.
+- **Deep links:** every floor has a shareable URL, for example
+  [`#city/interview-ace/2`](https://buildverse.anush.tech/#city/interview-ace/2).
+  Use the *Copy link* button inside a floor.
+- **Plain résumé:** [anush.tech](https://anush.tech/) and the
+  [PDF](public/Anush-Gupta-Product-Resume.pdf).
 
----
+## Engineering highlights
 
-## 🕹️ EXPERIMENTAL MODULES
-### 1. The "Anush Portfolio Loader" (APL-2.4)
-A cinematic boot sequence that checks if your hardware can handle the sheer magnitude of this portfolio. It only runs once per session. If it runs twice, your browser is haunted.
+Press <kbd>~</kbd> in the city to open the engine panel. It shows live numbers
+from the renderer, so you can check every claim below yourself.
 
-### 2. Quantum Sand Simulator
-A high-performance particle engine where you can draw shapes while questioning why you spent 4 hours on a sand simulator instead of studying for your OS exam. (It's Zen. Don't touch it.)
+| Feature | What it does | Where |
+| --- | --- | --- |
+| Static batching | Merges static meshes that share a material into one draw call. Floors keep their own picking identity; moving parts (`userData.batch = "live"`) are batched relative to themselves. A toggle in the engine panel undoes it live. | [`scene-kit.ts`](components/city/scene-kit.ts) |
+| Adaptive quality | Three tiers (pixel ratio, shadows, ink pass). In Auto, a governor drops one tier after a 3 s window under 40 fps. It ignores stalls over 250 ms and never steps back up, so the city cannot flicker between tiers. | [`render-quality.ts`](lib/render-quality.ts) |
+| Blueprint X-ray | Swaps every mesh to a fresnel-rim additive shader, one colour per material. You see through the city, and each colour is a separate draw call. Press <kbd>X</kbd>. | [`engine.ts`](components/city/engine.ts) |
+| Illustrated rendering | A single post-process pass draws ink edges from the colour buffer with five samples, instead of a separate ID/depth/normal pipeline. | [`illustration-pass.ts`](components/city/illustration-pass.ts) |
+| Live renderer stats | `renderer.info` is reset by hand once per frame, so counts include shadow and post-processing passes, not only the last pass. | [`perf-hud.tsx`](components/city/perf-hud.tsx) |
+| Build-time share image | The Open Graph image draws the real skyline from the building data, one bar per building scaled by floor count. | [`app/og.png/route.tsx`](app/og.png/route.tsx) |
 
-### 3. The Dual-Brain Overlay
-An interface that toggles between **[ENGINEER_MODE]** (writing bugs) and **[PRODUCT_MODE]** (explaining why those bugs are actually "undocumented features").
+### Measured
 
----
+Measured in the engine panel, 800 px wide viewport, medium tier:
 
-## 🏃 RUNNING THE SIMULATION
-If you dare to run this locally, ensure you have a sacrificial rubber duck nearby.
+| | Draw calls per frame |
+| --- | --- |
+| Static batching off | 3,127 |
+| Static batching on | 1,200 (−62%) |
 
-```bash
-npm install     # Summon dependencies from the void
-npm run dev     # Initiate temporal convergence at localhost:3000
+The high tier, which adds the sun's shadow pass, draws 2,324 calls with
+batching on. Frame rates depend on the device, so the panel shows yours live
+instead of a number in this file.
+
+## Architecture
+
+```mermaid
+flowchart LR
+  data["lib/data.ts<br/>resume content"] --> layout["lib/city-layout.ts<br/>buildings, routes, physics"]
+  layout --> engine["components/city/engine.ts<br/>Three.js scene + render loop"]
+  kit["scene-kit.ts<br/>shared materials, batching"] --> engine
+  quality["lib/render-quality.ts<br/>tiers + governor"] --> engine
+  engine -- "onUpdate(snapshot)" --> app["city-app.tsx<br/>React UI: HUD, dialogs, tour"]
+  app -- "commands" --> engine
 ```
 
----
+- **Engine and UI are separate.** [`engine.ts`](components/city/engine.ts) owns
+  the Three.js scene and loop and exposes a small command API. React in
+  [`city-app.tsx`](components/city/city-app.tsx) renders the HUD and dialogs
+  from engine snapshots. While moving, the engine emits a snapshot at most
+  every 180 ms, so React does not re-render every frame.
+- **Pure logic lives in `lib/`** with no Three.js imports: car physics,
+  collision, camera flights, routes, weather, the tour and the quality governor.
+  That is what the tests cover.
+- **Everything is generated.** No downloaded models or textures. Each of the 15
+  addresses has its own massing, built from primitives in
+  [`landmarks.ts`](components/city/landmarks.ts) and
+  [`architecture.ts`](components/city/architecture.ts).
+- **Static export.** Next.js 14 `output: "export"` to GitHub Pages. No backend,
+  no API keys, no tracking.
 
-## 📜 SURVIVAL RULES
-1. **Don't hardcode**: Unless you want to be hunted by the ghost of Clean Architecture.
-2. **Commit often**: The apocalypse waits for no one.
-3. **Respect the Bento**: The grid is law. The grid is life.
+More detail: [`docs/BUILDVERSE_CITY.md`](docs/BUILDVERSE_CITY.md).
 
----
+## Controls
 
-## 📬 CONTACT THE ARCHITECT
-If you have a job offer, a better way to center a div, or a lead on some rare F1 collectibles, reach out to **Anush Gupta**.
+| Key | Action |
+| --- | --- |
+| WASD / arrows | Walk (Shift sprints, Space jumps) |
+| E | Enter a nearby door |
+| F | Get in or out of the car |
+| ~ | Engine panel |
+| X | Blueprint X-ray |
+| Esc | Stop the tour, close dialogs |
 
-- **Email**: [anushgupta105@gmail.com](mailto:anushgupta105@gmail.com)
-- **Domain**: [buildverse.anush.tech](https://buildverse.anush.tech) (Now Live in this dimension!)
+Touch devices get an on-screen direction pad.
 
----
+## Run locally
 
-*Built with ❤️ and ☕ in the ruins of the old world. Stay safe, survivor.*
+Requires Node 20.
+
+```bash
+npm ci
+npm run dev
+```
+
+Before pushing:
+
+```bash
+npm run lint && npx tsc --noEmit && npm test && npm run build
+```
+
+Tests use `node --test` and transpile TypeScript on the fly, so they need no
+browser. GitHub Actions runs them and deploys `out/` on pushes to `main`.
 
 ## Updating portfolio content
 
@@ -67,5 +115,7 @@ Resume-based content lives in `lib/data.ts`. The downloadable source PDF is in
 `public/Anush-Gupta-Product-Resume.pdf`. The first Park+ internship date is
 Jan–Feb 2024, corrected by Anush; the original PDF still prints 2023.
 
-Run `npm ci`, `npm run lint`, and `npm run build` before pushing. The existing
-GitHub Actions workflow deploys the `out/` static export on pushes to `main`.
+## Contact
+
+Anush Gupta · [anushgupta105@gmail.com](mailto:anushgupta105@gmail.com) ·
+[buildverse.anush.tech](https://buildverse.anush.tech)
