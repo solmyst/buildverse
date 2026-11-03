@@ -72,6 +72,8 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
   renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = innerWidth >= 900;
   renderer.shadowMap.type = THREE.PCFShadowMap;
+  // Post-processing renders several passes per frame; count them all for the engineer HUD.
+  renderer.info.autoReset = false;
   const scene = new THREE.Scene();
   const roomEnvironment = new RoomEnvironment();
   const pmrem = new THREE.PMREMGenerator(renderer);
@@ -241,6 +243,10 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
   // Thousands of static props share a few dozen materials; drawing them per material
   // instead of per mesh is what keeps the city interactive on ordinary laptops.
   const batched = kit.batch(city);
+  const gl = renderer.getContext(), gpuInfo = gl.getExtension("WEBGL_debug_renderer_info");
+  // "ANGLE (Apple, ANGLE Metal Renderer: Apple M2, …)" reads as "Apple M2".
+  const gpu = String(gl.getParameter(gpuInfo ? gpuInfo.UNMASKED_RENDERER_WEBGL : gl.RENDERER))
+    .replace(/^ANGLE \([^,]*, (?:ANGLE \w+ Renderer: )?([^,]+?)(?: Direct3D.*)?(?:,.*)?\)$/, "$1");
   if (process.env.NODE_ENV !== "production")
     setTimeout(() => {
       const stale = batched.stale();
@@ -274,6 +280,9 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     lastTime = 0,
     elapsed = 0,
     lastEmit = 0;
+  let frames = 0,
+    busy = 0,
+    sampled = performance.now();
   let pad: CityPoint = { x: 0, z: 0 };
   const keys = new Set<string>();
   const preference = matchMedia("(prefers-reduced-motion: reduce)");
@@ -531,6 +540,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
   }
   function draw() {
     if (lost) return;
+    renderer.info.reset();
     if (illustrated || night) effects().render();
     else renderer.render(scene, camera);
   }
@@ -538,6 +548,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     if (time - lastTime < 1000 / 60 - 1) return;
     const delta = lastTime ? Math.min((time - lastTime) / 1000, 0.1) : 0;
     lastTime = time;
+    const started = performance.now();
     if (flight) {
       flight.elapsed += delta;
       const progress = flightProgress(flight.elapsed, flight.duration);
@@ -753,6 +764,8 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     if (!flight && controls.enabled) controls.update();
     if (mode === "street" && !flight && !activity) avoidWalls();
     draw();
+    frames++;
+    busy += performance.now() - started;
     if (time - lastEmit > 180) {
       lastEmit = time;
       update();
@@ -956,6 +969,26 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     boardActivity() { rides.board(); update(); },
     leaveActivity() { stopActivity(); walk(); update(); },
     setIllustrated(value: boolean) { illustrated = value; draw(); },
+    setBatching(value: boolean) { batched.setMerged(value); draw(); },
+    // Averages since the previous call, so the HUD controls the sample window.
+    stats() {
+      const now = performance.now(), { render, memory } = renderer.info;
+      const result = {
+        fps: (frames * 1000) / (now - sampled),
+        frameMs: frames ? busy / frames : 0,
+        calls: render.calls,
+        triangles: render.triangles,
+        geometries: memory.geometries,
+        textures: memory.textures,
+        batchedMeshes: batched.before,
+        batches: batched.after,
+        pixelRatio: renderer.getPixelRatio(),
+        shadows: renderer.shadowMap.enabled,
+        gpu,
+      };
+      frames = 0; busy = 0; sampled = now;
+      return result;
+    },
     setShowLabels(value: boolean) { showLabels = value; syncNames(); draw(); },
     celebrateDiscovery() { courtyard.celebrate(); },
     visitPlace(id: string) {

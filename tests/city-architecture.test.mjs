@@ -74,6 +74,12 @@ test("static batching folds props per material and leaves moving parts alone", (
   const bounds = new THREE.Box3().setFromObject(root);
   assert.deepEqual([bounds.min.x, bounds.max.x, bounds.max.y], [-0.5, 18.5, 6.5]);
   assert.deepEqual(result.stale(), []);
+  const drawn = () => { let count = 0; root.traverseVisible((object) => { if (object.isMesh) count++; }); return count; };
+  assert.equal(drawn(), 3);
+  result.setMerged(false);
+  assert.equal(drawn(), 14, "unbatching restores every original mesh");
+  result.setMerged(true);
+  assert.equal(drawn(), 3);
   sign.rotation.y = 1;
   assert.deepEqual(result.stale(), [sign], "moving a batched object is reported");
   kit.dispose();

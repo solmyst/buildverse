@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowDown,
   ArrowUpRight,
@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronUp,
   Footprints,
+  Gauge,
   Home,
   Info,
   Map,
@@ -35,6 +36,7 @@ import CityDialog from "./dialog";
 import { activities, type ActivityId } from "@/lib/city-activities";
 import Dossier from "./dossier";
 import CityMinimap from "./minimap";
+import PerfHud from "./perf-hud";
 import DirectionPad from "./dpad";
 const initialSnapshot: CitySnapshot = {
   mode: "overview",
@@ -92,6 +94,9 @@ export default function CityApp() {
   const [night, setNight] = useState(false),
     [paused, setPaused] = useState(false);
   const [hover, setHover] = useState("");
+  const [perf, setPerf] = useState(false);
+  const perfStats = useCallback(() => engine.current?.stats(), []);
+  const perfBatching = useCallback((value: boolean) => engine.current?.setBatching(value), []);
   const [travel, setTravel] = useState<"overview" | "walk">("overview");
   const [enterVersion, setEnterVersion] = useState(0);
   const [visited, setVisited] = useState<string[]>([]);
@@ -199,6 +204,7 @@ export default function CityApp() {
     let progress = 0;
     const handler = (event: KeyboardEvent) => {
       if (event.repeat || (event.target as HTMLElement)?.closest("input,textarea,dialog,[contenteditable=true]")) return;
+      if (event.key === "~" || event.key === "`") setPerf((value) => !value);
       const result = advanceSecret(progress, event.key); progress = result.progress;
       if (result.unlocked) actions.current.discover("konami");
     };
@@ -476,6 +482,15 @@ export default function CityApp() {
           <button
             type="button"
             className="city-icon"
+            aria-label="Show engine performance (~)"
+            aria-pressed={perf}
+            onClick={() => setPerf(!perf)}
+          >
+            <Gauge size={18} />
+          </button>
+          <button
+            type="button"
+            className="city-icon"
             onClick={() => setHelp(!help)}
             aria-label="Show game controls"
             aria-pressed={help}
@@ -497,6 +512,7 @@ export default function CityApp() {
           </a>
         </div>
       </header>
+      {perf && ready && <PerfHud stats={perfStats} onBatching={perfBatching} onClose={() => setPerf(false)} />}
       {titleScreen && (
         <aside className="city-title" aria-labelledby="city-title-heading">
           <p className="city-title-eyebrow">ANUSH GUPTA PRESENTS</p>

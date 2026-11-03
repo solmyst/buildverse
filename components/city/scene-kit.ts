@@ -222,6 +222,8 @@ export function createSceneKit() {
     const batches = new Map<string, { anchor: THREE.Object3D; material: THREE.Material; mesh: THREE.Mesh; geometries: THREE.BufferGeometry[] }>();
     const frozen: Array<{ object: THREE.Object3D; matrix: THREE.Matrix4; visible: boolean; material?: unknown }> = [];
     const inverses = new Map<THREE.Object3D, THREE.Matrix4>();
+    const removed: Array<[THREE.Mesh, THREE.Object3D]> = [];
+    const combined: THREE.Mesh[] = [];
     let before = 0;
     const visit = (object: THREE.Object3D, anchor: THREE.Object3D) => {
       for (const child of [...object.children]) {
@@ -245,6 +247,7 @@ export function createSceneKit() {
           const entry = batches.get(key) ?? { anchor, material: mesh.material, mesh, geometries: [] };
           entry.geometries.push(source);
           batches.set(key, entry);
+          removed.push([mesh, object]);
           mesh.removeFromParent();
           continue;
         }
@@ -256,14 +259,23 @@ export function createSceneKit() {
       const merged = geometries.length > 1 ? mergeGeometries(geometries, false) : geometries[0];
       if (merged !== geometries[0]) geometries.forEach((geometry) => geometry.dispose());
       if (!merged) throw new Error(`Cannot batch meshes of material ${material.name || material.uuid}`);
-      const combined = new THREE.Mesh(track(merged), material);
-      combined.castShadow = mesh.castShadow;
-      combined.receiveShadow = mesh.receiveShadow;
-      anchor.add(combined);
+      const batchMesh = new THREE.Mesh(track(merged), material);
+      batchMesh.castShadow = mesh.castShadow;
+      batchMesh.receiveShadow = mesh.receiveShadow;
+      anchor.add(batchMesh);
+      combined.push(batchMesh);
     }
     return {
       before,
       after: batches.size,
+      // Restores the original meshes so the engineer HUD can show the unbatched cost.
+      setMerged(value: boolean) {
+        combined.forEach((mesh) => (mesh.visible = value));
+        for (const [mesh, parent] of removed) {
+          if (value) mesh.removeFromParent();
+          else parent.add(mesh);
+        }
+      },
       // Objects changed after batching no longer reach the screen; they need userData.batch = "live".
       stale: () =>
         frozen.filter(({ object, matrix, material }) => {
