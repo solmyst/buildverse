@@ -1876,3 +1876,113 @@ button.city-recruiter-link {
     transform: none;
   }
 }
+
+.city-travel-controls .city-mobile-activities {
+  display: none;
+}
+
+@media (max-width: 650px) {
+  .city-title {
+    padding: 0 16px max(16px, env(safe-area-inset-bottom));
+    inset: auto 0 0;
+    max-height: calc(100dvh - 72px);
+    overflow-y: auto;
+    justify-content: flex-start;
+    background: linear-gradient(0deg, #08161f 0%, #08161ff5 70%, #08161f00 100%);
+  }
+
+  .city-title-eyebrow {
+    margin-top: 24px;
+  }
+
+  .city-title-logo {
+    flex-direction: row;
+    flex-wrap: wrap;
+    font-size: clamp(2.25rem, 11vw, 4rem);
+  }
+
+  .city-title-actions {
+    margin: 0.75rem 0 0;
+  }
+
+  .city-title .city-recruiter-link {
+    margin: 6px 0;
+  }
+
+  .city-title-actions kbd,
+  .city-minimap,
+  .city-passport,
+  .city-weather-control,
+  .city-hover-note,
+  .city-activity-launch {
+    display: none;
+  }
+
+  .city-bottom-hud {
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  .city-travel-controls {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .city-travel-controls button,
+  .city-travel-controls .city-mobile-activities {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 48px;
+    padding: 4px;
+    font-size: 0.625rem;
+  }
+
+  .city-objective {
+    top: 100px;
+    width: min(220px, calc(100% - 24px));
+  }
+
+  .city-app:has(.city-guide, .city-tour, .city-ride-hud, .city-floor-panel) .city-objective,
+  .city-app:has(.city-guide, .city-tour) .city-dpad {
+    display: none;
+  }
+
+  .city-floor-panel {
+    max-height: max(100px, calc(100dvh - 310px));
+  }
+}
+
+@media (max-width: 650px) {
+  .city-brand > div > span,
+  .city-top-actions > .city-icon[aria-label="Show game controls"] {
+    display: none;
+  }
+
+  .city-interact:has(button) {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 8px);
+    display: flex;
+    max-width: 54%;
+  }
+
+  .city-interact button {
+    min-height: 44px;
+    white-space: normal;
+  }
+
+  .city-interact kbd,
+  .city-app:has(.city-guide, .city-tour, .city-floor-panel) .city-interact {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .city-brand {
+    padding-inline: 8px;
+  }
+
+  .city-top-actions > .city-icon[aria-label^="Switch to"] {
+    display: none;
+  }
+}

@@ -798,6 +798,10 @@ export default function CityApp() {
             <Map size={17} />
             <span>Directory</span>
           </button>
+          <button type="button" className="city-mobile-activities" onClick={() => setActivityMenu(true)}>
+            <Star size={17} />
+            <span>Activities</span>
+          </button>
         </div>
         <div className="city-interact">
           {snapshot.activity ? <span>{snapshot.activity.stage === "riding" ? "SEATED" : "AT THE DOCK"} · ESC TO RETURN TO THE STREET</span> : snapshot.driving ? (
