@@ -41,9 +41,11 @@ export const metadata: Metadata = {
     siteName: "Anush Gupta Portfolio",
     locale: "en_US",
     type: "website",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Anush Gupta — Buildverse City: a 3D portfolio city rendered in Three.js" }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
+    images: ["/og.png"],
     title: "Anush Gupta — Buildverse City",
     description: "Explore Anush Gupta’s 3D portfolio city: project buildings, engineering floors, product decisions, and experience at Park+.",
   },
