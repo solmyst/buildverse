@@ -23,6 +23,7 @@ export default function CityDirectory({
 }) {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All addresses");
+  // Projects lead because they are what most visitors came to see.
   const results = cityBuildings.filter(
     (building) =>
       (filter === "All addresses" ||
@@ -32,7 +33,7 @@ export default function CityDirectory({
       `${building.name} ${building.floors.join(" ")}`
         .toLowerCase()
         .includes(query.toLowerCase()),
-  );
+  ).sort((a, b) => Number(b.kind === "project") - Number(a.kind === "project"));
   const places = onExplore && filter !== "Projects" ? valleyPlaces.filter(place => `${place.name} ${place.detail}`.toLowerCase().includes(query.toLowerCase())) : [];
   return (
     <CityDialog
@@ -78,7 +79,6 @@ export default function CityDirectory({
         {results.length + places.length} destinations
       </p>
       <div className="directory-buildings">
-        {places.map(place => <button type="button" key={place.id} onClick={() => onExplore?.(place.id)} aria-label={`Explore ${place.name}`}><span className="directory-building-icon">✿</span><span><strong>{place.name}</strong><small>{place.detail}</small></span><ArrowUpRight size={16}/></button>)}
         {results.map((building) => (
           <button
             type="button"
@@ -105,6 +105,7 @@ export default function CityDirectory({
             <ArrowUpRight size={16} />
           </button>
         ))}
+        {places.map(place => <button type="button" key={place.id} onClick={() => onExplore?.(place.id)} aria-label={`Explore ${place.name}`}><span className="directory-building-icon">✿</span><span><strong>{place.name}</strong><small>{place.detail}</small></span><ArrowUpRight size={16}/></button>)}
       </div>
       {results.length === 0 && places.length === 0 && (
         <div className="directory-empty">

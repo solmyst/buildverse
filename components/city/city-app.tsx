@@ -10,6 +10,7 @@ import {
   ChevronUp,
   Footprints,
   Gauge,
+  Link2,
   Home,
   Info,
   Map,
@@ -37,6 +38,8 @@ import { activities, type ActivityId } from "@/lib/city-activities";
 import Dossier from "./dossier";
 import CityMinimap from "./minimap";
 import PerfHud from "./perf-hud";
+import HireCard from "./hire-card";
+import { cityTour, tourStopSeconds } from "@/lib/city-tour";
 import DirectionPad from "./dpad";
 const initialSnapshot: CitySnapshot = {
   mode: "overview",
@@ -96,6 +99,9 @@ export default function CityApp() {
   const [hover, setHover] = useState("");
   const [perf, setPerf] = useState(false);
   const [xray, setXray] = useState(false);
+  const [tour, setTour] = useState<number | null>(null);
+  const [hire, setHire] = useState(false);
+  const [copied, setCopied] = useState(false);
   const perfStats = useCallback(() => engine.current?.stats(), []);
   const perfBatching = useCallback((value: boolean) => engine.current?.setBatching(value), []);
   const tier = snapshot.quality?.tier;
@@ -175,6 +181,11 @@ export default function CityApp() {
   function launchActivity(id: ActivityId) {
     setActivityMenu(false); setGuide(false); goWalking(); setBanner(null); setActivityRequest({ id });
   }
+  function startTour() {
+    setHelp(false); setGuide(false); setDirectory(false); setHire(false); setBanner(null);
+    if (routeRef.current) updateRoute(null);
+    setTour(0);
+  }
   function startJourney() {
     goWalking();
     setBanner(null);
@@ -208,6 +219,7 @@ export default function CityApp() {
       if (event.repeat || (event.target as HTMLElement)?.closest("input,textarea,dialog,[contenteditable=true]")) return;
       if (event.key === "~" || event.key === "`") setPerf((value) => !value);
       if (event.key.toLowerCase() === "x") setXray((value) => !value);
+      if (event.key === "Escape") setTour(null);
       const result = advanceSecret(progress, event.key); progress = result.progress;
       if (result.unlocked) actions.current.discover("konami");
     };
@@ -309,8 +321,8 @@ export default function CityApp() {
   }, [ready, route?.id, route?.floor, travel, enterVersion, place]);
   const titleScreen = help && !route;
   useEffect(() => {
-    engine.current?.setBlocked(titleScreen || directory || journal || activityMenu || !!route?.reading);
-  }, [ready, titleScreen, directory, journal, activityMenu, route?.reading]);
+    engine.current?.setBlocked(titleScreen || directory || journal || activityMenu || hire || !!route?.reading);
+  }, [ready, titleScreen, directory, journal, activityMenu, hire, route?.reading]);
   useEffect(() => {
     if (ready && activityRequest) engine.current?.startActivity(activityRequest.id);
   }, [ready, activityRequest]);
@@ -375,6 +387,19 @@ export default function CityApp() {
   }, [waypointDistance < 3.4]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { engine.current?.setLiving(living); }, [ready, living]);
   useEffect(() => { engine.current?.setXray(xray); }, [ready, xray]);
+  useEffect(() => {
+    if (tour === null || !ready) return;
+    if (tour >= cityTour.length) {
+      setTour(null);
+      engine.current?.overview();
+      setHire(true);
+      return;
+    }
+    engine.current?.inspect(cityTour[tour].id);
+    const timer = setTimeout(() => setTour(tour + 1), tourStopSeconds * 1000);
+    return () => clearTimeout(timer);
+  }, [ready, tour]);
+  useEffect(() => setCopied(false), [route?.id, route?.floor]);
   useEffect(() => { engine.current?.setIllustrated(illustrated); }, [ready, illustrated]);
   useEffect(() => { engine.current?.setShowLabels(showLabels); }, [ready, showLabels]);
   const nearby = cityBuildings.find(
@@ -443,10 +468,11 @@ export default function CityApp() {
               : "EST. 2023 · ALWAYS BUILDING"}
           </small>
         </div>
-        <div
+        <button
+          type="button"
           className="city-hire"
-          role="img"
-          aria-label={`Hire level ${hireLevel(visited.length)} of 5`}
+          aria-label={`Hire level ${hireLevel(visited.length)} of 5. Open contact card`}
+          onClick={() => setHire(true)}
         >
           <span>
             {hireSteps.map((step, index) => (
@@ -458,7 +484,7 @@ export default function CityApp() {
             ))}
           </span>
           <small>HIRE LEVEL</small>
-        </div>
+        </button>
           <button type="button" className="city-weather-control" aria-pressed={living} aria-label="Automatic simulated weather and day cycle" onClick={() => setLiving(!living)}>
             {living && snapshot.weather ? `SIM · ${String(Math.floor(snapshot.weather.hour)).padStart(2, "0")}:${String(Math.floor(snapshot.weather.hour % 1 * 60)).padStart(2, "0")} · ${snapshot.weather.temperature}°C · ${snapshot.weather.condition}` : "Live world"}
           </button>
@@ -519,6 +545,24 @@ export default function CityApp() {
         </div>
       </header>
       {perf && ready && <PerfHud stats={perfStats} onBatching={perfBatching} onClose={() => setPerf(false)} quality={snapshot.quality} onQuality={(mode) => engine.current?.setQuality(mode)} xray={xray} onXray={setXray} />}
+      {tour !== null && cityTour[tour] && (
+        <aside className="city-tour" aria-live="polite" aria-label="Autopilot tour">
+          <p className="city-kicker">AUTOPILOT TOUR · {tour + 1} / {cityTour.length}</p>
+          <h2>{cityTour[tour].name}</h2>
+          <p>{cityTour[tour].line}</p>
+          <span className="city-tour-bar" aria-hidden="true">
+            <span key={tour} style={{ animationDuration: `${tourStopSeconds}s` }} />
+          </span>
+          <div>
+            <button type="button" className="city-primary" onClick={() => { const id = cityTour[tour].id; setTour(null); visit(id); }}>
+              Step inside
+            </button>
+            <button type="button" className="city-secondary" onClick={() => setTour(tour + 1)}>Next</button>
+            <button type="button" className="city-secondary" onClick={() => setTour(null)}>Stop</button>
+          </div>
+        </aside>
+      )}
+      <HireCard open={hire} onClose={() => setHire(false)} onTour={startTour} stars={hireLevel(visited.length)} />
       {xray && ready && (
         <p className="city-xray-legend" role="status">
           <strong>Blueprint X-ray</strong> Colours mark separate draw calls · <kbd>X</kbd> to exit
@@ -550,6 +594,9 @@ export default function CityApp() {
               <ArrowUpRight size={15} />
             </button>
           </div>
+          <button type="button" className="city-recruiter-link" onClick={startTour}>
+            <Play size={13} /> No time to explore? Watch the 60-second autopilot tour
+          </button>
           <ul className="city-title-controls">
             <li>
               <kbd>W A S D</kbd>Move
@@ -657,6 +704,16 @@ export default function CityApp() {
               <ArrowDown size={15} />
               Exit to street
             </button>
+            {route && (
+              <button
+                type="button"
+                className="city-secondary"
+                onClick={() => navigator.clipboard?.writeText(window.location.href).then(() => setCopied(true), () => setCopied(false))}
+              >
+                <Link2 size={15} />
+                {copied ? "Copied" : "Copy link"}
+              </button>
+            )}
           </div>
         </aside>
       )}

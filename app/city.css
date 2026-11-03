@@ -1785,3 +1785,94 @@
     text-align: center;
   }
 }
+button.city-hire {
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+button.city-hire:hover {
+  border-color: #f2c46d66;
+}
+button.city-recruiter-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.city-tour {
+  position: absolute;
+  left: 50%;
+  bottom: 96px;
+  z-index: 4;
+  width: min(440px, calc(100% - 32px));
+  transform: translateX(-50%);
+  padding: 1rem 1.125rem;
+  background: var(--hud);
+  border: 1px solid var(--hud-line);
+  border-radius: 0.875rem;
+  backdrop-filter: blur(18px);
+}
+.city-tour h2 {
+  margin: 0.25rem 0 0.125rem;
+  font-size: 1.25rem;
+}
+.city-tour > p:not(.city-kicker) {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.city-tour-bar {
+  display: block;
+  height: 3px;
+  margin: 0.75rem 0;
+  background: var(--hud-line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.city-tour-bar span {
+  display: block;
+  height: 100%;
+  background: var(--mint);
+  transform-origin: left;
+  animation: city-tour-progress linear forwards;
+}
+@keyframes city-tour-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.city-tour > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.city-hire-card {
+  padding: 2rem 1.5rem;
+}
+.city-hire-card h2 {
+  margin: 0.25rem 0 0.5rem;
+  font-size: 2rem;
+}
+.city-hire-card > p:not(.city-kicker) {
+  margin: 0 0 1.25rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.city-hire-actions {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.city-hire-actions > * {
+  justify-content: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .city-tour-bar span {
+    animation: none;
+    transform: none;
+  }
+}
