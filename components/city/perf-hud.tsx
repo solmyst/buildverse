@@ -12,12 +12,16 @@ export default function PerfHud({
   onClose,
   quality,
   onQuality,
+  xray,
+  onXray,
 }: {
   stats: () => Stats | undefined;
   onBatching: (value: boolean) => void;
   onClose: () => void;
   quality?: { tier: QualityTier; mode: QualityMode };
   onQuality: (mode: QualityMode) => void;
+  xray: boolean;
+  onXray: (value: boolean) => void;
 }) {
   const [sample, setSample] = useState<Stats>();
   const [fps, setFps] = useState<number[]>([]);
@@ -76,6 +80,10 @@ export default function PerfHud({
         <small>
           {sample ? `${number.format(sample.batchedMeshes)} props folded into ${sample.batches} draws` : ""}
         </small>
+      </button>
+      <button type="button" className="city-perf-toggle" aria-pressed={xray} onClick={() => onXray(!xray)}>
+        <span>Blueprint X-ray {xray ? "ON" : "OFF"}</span>
+        <small>See through the city, one colour per draw call · X</small>
       </button>
       <p className="city-perf-hint">
         Auto drops a tier after 3 s under 40 fps: shadows and resolution first, then the ink pass. Press <kbd>~</kbd> to hide.

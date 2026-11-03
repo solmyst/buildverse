@@ -543,6 +543,55 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     inkPass!.uniforms.uResolution.value.copy(size);
     return composer;
   }
+  // Blueprint X-ray: every mesh becomes a see-through shell, and neighbouring draw
+  // calls get different colours so the batching is visible.
+  const xrayMaterials = Array.from({ length: 24 }, (_, i) => kit.track(new THREE.ShaderMaterial({
+    uniforms: { uColor: { value: new THREE.Color().setHSL((0.5 + i * 0.618) % 1, 0.7, 0.58) } },
+    vertexShader: `varying vec3 vNormal; varying vec3 vView;
+void main() {
+  vec4 view = modelViewMatrix * vec4(position, 1.0);
+  vNormal = normalize(normalMatrix * normal);
+  vView = -view.xyz;
+  gl_Position = projectionMatrix * view;
+}`,
+    fragmentShader: `uniform vec3 uColor; varying vec3 vNormal; varying vec3 vView;
+void main() {
+  // Stacked layers add up, so faces stay faint and only silhouettes glow.
+  float rim = pow(1.0 - abs(dot(normalize(vNormal), normalize(vView))), 3.0);
+  gl_FragColor = vec4(uColor * (0.025 + rim * 0.8), 1.0);
+}`,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,
+  })));
+  const xrayMaterialSet = new Set<THREE.Material>(xrayMaterials);
+  const xrayed = new Map<THREE.Mesh, THREE.Material | THREE.Material[]>();
+  const blueprint = new THREE.Color("#06121c");
+  let xray = false;
+  // Runs every X-ray frame so rooms built later and materials swapped by animations are covered.
+  function applyXray() {
+    scene.traverse((object) => {
+      const mesh = object as THREE.Mesh;
+      if (!mesh.isMesh || (mesh as THREE.InstancedMesh).isInstancedMesh || xrayMaterialSet.has(mesh.material as THREE.Material)) return;
+      if (mesh.userData.xray === "hide") {
+        if (mesh.visible && !xrayed.has(mesh)) { xrayed.set(mesh, mesh.material); mesh.visible = false; }
+        return;
+      }
+      xrayed.set(mesh, mesh.material);
+      mesh.material = xrayMaterials[mesh.id % xrayMaterials.length];
+    });
+  }
+  function setXray(value: boolean) {
+    xray = value;
+    scene.background = value ? blueprint : null;
+    if (value) return applyXray();
+    for (const [mesh, material] of Array.from(xrayed)) {
+      if (mesh.userData.xray === "hide") mesh.visible = true;
+      else mesh.material = material;
+    }
+    xrayed.clear();
+  }
   function inked() {
     return illustrated && qualityTiers[tier].ink;
   }
@@ -556,7 +605,10 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
   function draw() {
     if (lost) return;
     renderer.info.reset();
-    if (inked() || night) effects().render();
+    if (xray) {
+      applyXray();
+      renderer.render(scene, camera);
+    } else if (inked() || night) effects().render();
     else renderer.render(scene, camera);
   }
   function frame(time: number) {
@@ -995,6 +1047,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
       update();
       draw();
     },
+    setXray(value: boolean) { setXray(value); draw(); },
     setBatching(value: boolean) { batched.setMerged(value); draw(); },
     // Averages since the previous call, so the HUD controls the sample window.
     stats() {

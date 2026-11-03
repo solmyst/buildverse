@@ -41,6 +41,7 @@ void main() {
     ),
   );
   dome.renderOrder = -1;
+  dome.userData.xray = "hide";
   scene.add(dome);
   const mix = <K extends "top" | "horizon" | "sun">(t: number, key: K, out: THREE.Color) => {
     const [a, b, f] = t < 0.5 ? [keys[0], keys[1], t * 2] : [keys[1], keys[2], t * 2 - 1];

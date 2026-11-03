@@ -95,6 +95,7 @@ export default function CityApp() {
     [paused, setPaused] = useState(false);
   const [hover, setHover] = useState("");
   const [perf, setPerf] = useState(false);
+  const [xray, setXray] = useState(false);
   const perfStats = useCallback(() => engine.current?.stats(), []);
   const perfBatching = useCallback((value: boolean) => engine.current?.setBatching(value), []);
   const tier = snapshot.quality?.tier;
@@ -206,6 +207,7 @@ export default function CityApp() {
     const handler = (event: KeyboardEvent) => {
       if (event.repeat || (event.target as HTMLElement)?.closest("input,textarea,dialog,[contenteditable=true]")) return;
       if (event.key === "~" || event.key === "`") setPerf((value) => !value);
+      if (event.key.toLowerCase() === "x") setXray((value) => !value);
       const result = advanceSecret(progress, event.key); progress = result.progress;
       if (result.unlocked) actions.current.discover("konami");
     };
@@ -372,6 +374,7 @@ export default function CityApp() {
     }
   }, [waypointDistance < 3.4]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { engine.current?.setLiving(living); }, [ready, living]);
+  useEffect(() => { engine.current?.setXray(xray); }, [ready, xray]);
   useEffect(() => { engine.current?.setIllustrated(illustrated); }, [ready, illustrated]);
   useEffect(() => { engine.current?.setShowLabels(showLabels); }, [ready, showLabels]);
   const nearby = cityBuildings.find(
@@ -515,7 +518,12 @@ export default function CityApp() {
           </a>
         </div>
       </header>
-      {perf && ready && <PerfHud stats={perfStats} onBatching={perfBatching} onClose={() => setPerf(false)} quality={snapshot.quality} onQuality={(mode) => engine.current?.setQuality(mode)} />}
+      {perf && ready && <PerfHud stats={perfStats} onBatching={perfBatching} onClose={() => setPerf(false)} quality={snapshot.quality} onQuality={(mode) => engine.current?.setQuality(mode)} xray={xray} onXray={setXray} />}
+      {xray && ready && (
+        <p className="city-xray-legend" role="status">
+          <strong>Blueprint X-ray</strong> Colours mark separate draw calls · <kbd>X</kbd> to exit
+        </p>
+      )}
       {titleScreen && (
         <aside className="city-title" aria-labelledby="city-title-heading">
           <p className="city-title-eyebrow">ANUSH GUPTA PRESENTS</p>

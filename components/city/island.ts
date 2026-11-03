@@ -92,6 +92,7 @@ export function buildIsland(city: THREE.Group, scene: THREE.Scene, kit: SceneKit
   ocean.rotation.x = -Math.PI / 2;
   ocean.position.y = -0.55;
   ocean.receiveShadow = true;
+  ocean.userData.xray = "hide";
   scene.add(ocean);
 
   // Ferris wheel on the north waterfront.
