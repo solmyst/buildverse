@@ -599,7 +599,7 @@ export default function CityApp() {
             </button>
           </div>
           <button type="button" className="city-recruiter-link" onClick={startTour}>
-            <Play size={13} /> No time to explore? Watch the 60-second autopilot tour
+            <Play size={13} /> Watch the 60-second tour
           </button>
           <ul className="city-title-controls">
             <li>
