@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { type CityBuilding, floorHeight } from "@/lib/city-layout";
 import type { SceneKit } from "./scene-kit";
 
@@ -74,7 +73,8 @@ export function createLandmark(kit: SceneKit, root: THREE.Group, b: CityBuilding
   for (let floor = 0; floor < n; floor++) {
     const level = new THREE.Group();
     level.position.y = 0.5 + floor * floorHeight;
-    level.userData = { buildingId: b.id, floor };
+    // Not a pick target: floors batch together and picking reads the floor from the hit height.
+    level.userData = { floor };
     root.add(level);
     levels.push(level);
     const t = floor / Math.max(1, n - 1);
@@ -261,30 +261,6 @@ export function createLandmark(kit: SceneKit, root: THREE.Group, b: CityBuilding
     for (const x of [-5, 5]) {
       box(root, [0.7, 0.4, 0.7], [x, 0.7, 4], ivory);
       kit.sphere(root, 0.45, [x, 1.2, 4], "#638665");
-    }
-  }
-  for (const level of levels) {
-    level.updateWorldMatrix(true, true);
-    const inverse = level.matrixWorld.clone().invert();
-    const batches = new Map<THREE.Material, THREE.BufferGeometry[]>();
-    level.traverse((object) => {
-      if (!(object instanceof THREE.Mesh) || Array.isArray(object.material)) return;
-      const clone = object.geometry.clone();
-      const geometry = clone.index ? clone.toNonIndexed() : clone;
-      if (geometry !== clone) clone.dispose();
-      geometry.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inverse, object.matrixWorld));
-      const batch = batches.get(object.material) ?? [];
-      batch.push(geometry);
-      batches.set(object.material, batch);
-    });
-    level.clear();
-    for (const [material, geometries] of Array.from(batches.entries())) {
-      const merged = mergeGeometries(geometries, false);
-      geometries.forEach((geometry) => geometry.dispose());
-      if (!merged) throw new Error(`Cannot batch the architecture of ${b.id}`);
-      const mesh = new THREE.Mesh(kit.track(merged), material);
-      mesh.castShadow = mesh.receiveShadow = true;
-      level.add(mesh);
     }
   }
   return { floors: levels, glass, style };

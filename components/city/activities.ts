@@ -8,7 +8,7 @@ export function createActivities(city: THREE.Group, kit: SceneKit, plane: THREE.
     const leg = kit.box(swing, [0.12, 3.7, 0.12], [x, 1.9, z], "#765e4e"); leg.rotation.x = z > 0 ? 0.15 : -0.15;
   }
   kit.box(swing, [2.5, 0.18, 0.2], [0, 3.7, 0], "#765e4e");
-  const pivot = new THREE.Group(); pivot.position.y = 3.6; swing.add(pivot);
+  const pivot = new THREE.Group(); pivot.position.y = 3.6; pivot.userData.batch = "live"; swing.add(pivot);
   for (const x of [-0.6, 0.6]) kit.box(pivot, [0.035, 2.7, 0.035], [x, -1.35, 0], "#d7caa5");
   kit.box(pivot, [1.5, 0.12, 0.55], [0, -2.7, 0], "#b48660");
   const seat = new THREE.Object3D(); seat.position.set(0, -2.55, 0); pivot.add(seat);

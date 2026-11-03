@@ -20,11 +20,13 @@ export function createConstruction(parent: THREE.Object3D, kit: SceneKit) {
   const crane = new THREE.Group();
   crane.position.set(-2.8, 0, -3.8); root.add(crane);
   kit.box(crane, [0.45, 13, 0.45], [0, 6.5, 0], "#e5b657");
-  const boom = new THREE.Group(); boom.position.y = 12.5; crane.add(boom);
+  const boom = new THREE.Group(); boom.position.y = 12.5; boom.userData.batch = "live"; crane.add(boom);
   kit.box(boom, [9, 0.35, 0.35], [2.5, 0, 0], "#e5b657");
   kit.box(boom, [1, 0.8, 0.8], [-1.5, -0.4, 0], "#42616b");
   const cable = kit.cylinder(boom, 0.025, 5, [5, -2.5, 0], "#344d58", 8);
+  cable.userData.batch = "live";
   const load = kit.box(boom, [0.9, 0.4, 0.7], [5, -5, 0], "#ab9071");
+  load.userData.batch = "live";
   for (let i = 0; i < 4; i++) kit.box(root, [1.6, 0.22, 0.6], [1, 0.4 + i * 0.23, 3.8], "#af8a61");
   kit.label(root, "CURRENTLY BUILDING", [0, 10, 0], "#edca83", 6);
   kit.label(root, currently.learning, [0, 8.8, 0], "#edca83", 8);

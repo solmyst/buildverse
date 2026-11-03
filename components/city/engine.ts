@@ -238,6 +238,14 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
   const sakuraValley = createSakuraValley(city, scene, kit);
   const weatherView = createWeather(scene, kit);
   const rides = createActivities(city, kit, sakuraValley.plane, sakuraValley.boat, island.gondola);
+  // Thousands of static props share a few dozen materials; drawing them per material
+  // instead of per mesh is what keeps the city interactive on ordinary laptops.
+  const batched = kit.batch(city);
+  if (process.env.NODE_ENV !== "production")
+    setTimeout(() => {
+      const stale = batched.stale();
+      if (stale.length) console.warn("Batched city objects changed after build; mark them userData.batch = \"live\"", stale);
+    }, 4000);
   let activity: { id: ActivityId; stage: "calling" | "ready" | "riding"; passenger?: boolean } | null = null;
   let returnPosition: CityPoint | null = null;
   let living = true, worldSeconds = 0;
@@ -874,7 +882,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
         : target?.userData.action === "read"
         ? "Open this floor’s dossier"
         : building
-          ? `${building.name} / F${String((target?.userData.floor ?? 0) + 1).padStart(2, "0")}`
+          ? `${building.name} / F${String(floorAt(building, target!, hit!) + 1).padStart(2, "0")}`
           : "";
     if (text !== lastHover) {
       lastHover = text;
@@ -915,8 +923,14 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     else if (String(object?.userData.action ?? "").startsWith("egg:")) options.onDiscover(object!.userData.action.slice(4));
     else if (object?.userData.action === "read") options.onRead();
     else if (object?.userData.action === "exit") options.onExit();
-    else if (object?.userData.buildingId)
-      options.onEnter(object.userData.buildingId, object.userData.floor ?? 0);
+    else if (object?.userData.buildingId) {
+      const building = cityBuildings.find((item) => item.id === object!.userData.buildingId);
+      if (building) options.onEnter(building.id, floorAt(building, object, hit));
+    }
+  }
+  // Building floors are batched into one mesh, so an unlabelled hit takes its floor from its height.
+  function floorAt(building: CityBuilding, target: THREE.Object3D, hit: THREE.Intersection) {
+    return target.userData.floor ?? THREE.MathUtils.clamp(Math.floor((hit.point.y - 0.5) / floorHeight), 0, building.floors.length - 1);
   }
   function contextLost(event: Event) {
     event.preventDefault();

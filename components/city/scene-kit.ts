@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 export function createSceneKit() {
   const resources: Array<{ dispose: () => void }> = [];
   const track = <T extends { dispose: () => void }>(resource: T): T => {
@@ -212,8 +213,68 @@ export function createSceneKit() {
     texture.anisotropy = 8;
     return texture;
   }
+  // Folds static meshes into one draw call per material under their nearest anchor:
+  // the root, a pick target (userData.buildingId/action), or anything marked
+  // userData.batch = "live" because code moves, swaps or toggles it after build.
+  // "skip" and hidden objects keep their whole subtree as built.
+  function batch(root: THREE.Object3D) {
+    root.updateWorldMatrix(true, true);
+    const batches = new Map<string, { anchor: THREE.Object3D; material: THREE.Material; mesh: THREE.Mesh; geometries: THREE.BufferGeometry[] }>();
+    const frozen: Array<{ object: THREE.Object3D; matrix: THREE.Matrix4; visible: boolean; material?: unknown }> = [];
+    const inverses = new Map<THREE.Object3D, THREE.Matrix4>();
+    let before = 0;
+    const visit = (object: THREE.Object3D, anchor: THREE.Object3D) => {
+      for (const child of [...object.children]) {
+        const { batch: mode, buildingId, action } = child.userData;
+        if (mode === "skip" || !child.visible) continue;
+        const isAnchor = mode === "live" || buildingId !== undefined || action !== undefined;
+        if (!isAnchor) {
+          child.updateMatrix();
+          frozen.push({ object: child, matrix: child.matrix.clone(), visible: true, material: (child as THREE.Mesh).material });
+        }
+        const mesh = child as THREE.Mesh;
+        if (
+          !isAnchor && mesh.isMesh && mesh.constructor === THREE.Mesh && !mesh.children.length &&
+          !Array.isArray(mesh.material) && !mesh.material.transparent && mesh.matrixWorld.determinant() > 0
+        ) {
+          before++;
+          if (!inverses.has(anchor)) inverses.set(anchor, anchor.matrixWorld.clone().invert());
+          const source = mesh.geometry.index ? mesh.geometry.toNonIndexed() : mesh.geometry.clone();
+          source.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inverses.get(anchor)!, mesh.matrixWorld));
+          const key = [anchor.id, mesh.material.uuid, mesh.castShadow, mesh.receiveShadow, Object.keys(source.attributes).sort()].join();
+          const entry = batches.get(key) ?? { anchor, material: mesh.material, mesh, geometries: [] };
+          entry.geometries.push(source);
+          batches.set(key, entry);
+          mesh.removeFromParent();
+          continue;
+        }
+        visit(child, isAnchor ? child : anchor);
+      }
+    };
+    visit(root, root);
+    for (const { anchor, material, mesh, geometries } of Array.from(batches.values())) {
+      const merged = geometries.length > 1 ? mergeGeometries(geometries, false) : geometries[0];
+      if (merged !== geometries[0]) geometries.forEach((geometry) => geometry.dispose());
+      if (!merged) throw new Error(`Cannot batch meshes of material ${material.name || material.uuid}`);
+      const combined = new THREE.Mesh(track(merged), material);
+      combined.castShadow = mesh.castShadow;
+      combined.receiveShadow = mesh.receiveShadow;
+      anchor.add(combined);
+    }
+    return {
+      before,
+      after: batches.size,
+      // Objects changed after batching no longer reach the screen; they need userData.batch = "live".
+      stale: () =>
+        frozen.filter(({ object, matrix, material }) => {
+          object.updateMatrix();
+          return !object.matrix.equals(matrix) || !object.visible || (object as THREE.Mesh).material !== material;
+        }).map(({ object }) => object),
+    };
+  }
   return {
     track,
+    batch,
     box,
     cylinder,
     sphere,

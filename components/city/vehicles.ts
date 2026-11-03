@@ -3,6 +3,7 @@ import type { SceneKit } from "./scene-kit";
 // The hero's coupe. Forward is +z, matching the character and driveCar heading.
 export function createHeroCar(kit: SceneKit) {
   const root = new THREE.Group();
+  root.userData.batch = "skip";
   root.scale.setScalar(0.65);
   const body = new THREE.Group();
   root.add(body);

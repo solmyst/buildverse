@@ -37,14 +37,14 @@ export function createPersonalCourtyard(city: THREE.Group, kit: SceneKit) {
   for (const x of [-0.55, 0.55]) for (const z of [-0.5, 0.5]) {
     kit.cylinder(pit, 0.23, 0.2, [x, 1.18, z], "#273b40", 16).rotation.z = Math.PI / 2;
   }
-  const arcade = new THREE.Group(); arcade.position.set(0, 0, -2.8); root.add(arcade);
+  const arcade = new THREE.Group(); arcade.position.set(0, 0, -2.8); arcade.userData.batch = "live"; root.add(arcade);
   kit.box(arcade, [1.35, 1.8, 0.9], [0, 1.1, 0], "#344e5d");
   kit.box(arcade, [1.12, 0.72, 0.06], [0, 1.5, 0.48], "#9ad0bc", true);
   kit.box(arcade, [1.4, 0.16, 0.65], [0, 0.98, 0.4], "#b5a1c5");
   for (const x of [-0.3, 0.05, 0.3]) kit.sphere(arcade, 0.07, [x, 1.12, 0.55], "#eed59d");
   kit.label(arcade, "INSERT CURIOSITY", [0, 2.3, 0.5], "#e8d0a2", 2.5);
   const bug = new THREE.Group(); bug.position.set(0.95, 0.7, -2.5); bug.userData.action = "egg:golden-bug"; root.add(bug);
-  const shell = kit.sphere(bug, 0.18, [0, 0, 0], "#e4be69"); shell.scale.z = 1.4;
+  const shell = kit.sphere(bug, 0.18, [0, 0, 0], "#e4be69"); shell.scale.z = 1.4; shell.userData.batch = "live";
   kit.sphere(bug, 0.1, [0, 0, 0.27], "#e4be69");
   for (const side of [-1, 1]) for (let i = 0; i < 3; i++) {
     const leg = kit.box(bug, [0.34, 0.025, 0.025], [side * 0.17, -0.05, (i - 1) * 0.15], "#b48c47"); leg.rotation.y = side * (i - 1) * 0.4;

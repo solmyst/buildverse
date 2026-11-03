@@ -106,6 +106,7 @@ export function buildIsland(city: THREE.Group, scene: THREE.Scene, kit: SceneKit
       leg.rotation.z = x > 0 ? -0.2 : 0.2;
     }
   const wheel = new THREE.Group();
+  wheel.userData.batch = "live";
   wheel.position.y = 7.8;
   ferris.add(wheel);
   for (const z of [-0.45, 0.45]) {
@@ -124,6 +125,7 @@ export function buildIsland(city: THREE.Group, scene: THREE.Scene, kit: SceneKit
     spoke.rotation.z = angle - Math.PI / 2;
     kit.sphere(wheel, 0.16, [Math.cos(angle + 0.26) * 6, Math.sin(angle + 0.26) * 6, 0.5], bulbs[i % 4]).material = kit.material(bulbs[i % 4], true);
     const gondola = new THREE.Group();
+    gondola.userData.batch = "live";
     gondola.position.set(Math.cos(angle) * 6, Math.sin(angle) * 6, 0);
     wheel.add(gondola);
     kit.box(gondola, [0.9, 0.12, 0.8], [0, -1.05, 0], bulbs[i % 4]);
