@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { createCity } from "./engine";
+import type { QualityMode, QualityTier } from "@/lib/render-quality";
 type Stats = ReturnType<ReturnType<typeof createCity>["stats"]>;
 const history = 48;
 const number = new Intl.NumberFormat("en");
@@ -9,10 +10,14 @@ export default function PerfHud({
   stats,
   onBatching,
   onClose,
+  quality,
+  onQuality,
 }: {
   stats: () => Stats | undefined;
   onBatching: (value: boolean) => void;
   onClose: () => void;
+  quality?: { tier: QualityTier; mode: QualityMode };
+  onQuality: (mode: QualityMode) => void;
 }) {
   const [sample, setSample] = useState<Stats>();
   const [fps, setFps] = useState<number[]>([]);
@@ -51,6 +56,16 @@ export default function PerfHud({
         {heap !== undefined && <div><dt>JS heap</dt><dd>{Math.round(heap / 2 ** 20)} MB</dd></div>}
         <div><dt>Pixel ratio</dt><dd>{sample ? `${sample.pixelRatio}× ${sample.shadows ? "· shadows" : ""}` : "–"}</dd></div>
       </dl>
+      <fieldset className="city-perf-quality">
+        <legend>
+          Quality · {quality?.mode === "auto" ? `auto picked ${quality.tier}` : "manual"}
+        </legend>
+        {(["auto", "high", "medium", "low"] as const).map((mode) => (
+          <button key={mode} type="button" aria-pressed={quality?.mode === mode} onClick={() => onQuality(mode)}>
+            {mode}
+          </button>
+        ))}
+      </fieldset>
       <button
         type="button"
         className="city-perf-toggle"
@@ -62,7 +77,9 @@ export default function PerfHud({
           {sample ? `${number.format(sample.batchedMeshes)} props folded into ${sample.batches} draws` : ""}
         </small>
       </button>
-      <p className="city-perf-hint">Press <kbd>~</kbd> to hide · counts include shadow and post passes</p>
+      <p className="city-perf-hint">
+        Auto drops a tier after 3 s under 40 fps: shadows and resolution first, then the ink pass. Press <kbd>~</kbd> to hide.
+      </p>
     </aside>
   );
 }

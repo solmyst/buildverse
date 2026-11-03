@@ -97,6 +97,7 @@ export default function CityApp() {
   const [perf, setPerf] = useState(false);
   const perfStats = useCallback(() => engine.current?.stats(), []);
   const perfBatching = useCallback((value: boolean) => engine.current?.setBatching(value), []);
+  const tier = snapshot.quality?.tier;
   const [travel, setTravel] = useState<"overview" | "walk">("overview");
   const [enterVersion, setEnterVersion] = useState(0);
   const [visited, setVisited] = useState<string[]>([]);
@@ -482,11 +483,13 @@ export default function CityApp() {
           <button
             type="button"
             className="city-icon"
-            aria-label="Show engine performance (~)"
+            aria-label={`Show engine performance (~). Quality: ${tier ?? "loading"}`}
+            title={tier && `Quality: ${tier}${snapshot.quality?.mode === "auto" ? " (auto)" : ""}`}
             aria-pressed={perf}
             onClick={() => setPerf(!perf)}
           >
             <Gauge size={18} />
+            {tier && <span className={`city-quality-dot city-quality-${tier}`} aria-hidden="true" />}
           </button>
           <button
             type="button"
@@ -512,7 +515,7 @@ export default function CityApp() {
           </a>
         </div>
       </header>
-      {perf && ready && <PerfHud stats={perfStats} onBatching={perfBatching} onClose={() => setPerf(false)} />}
+      {perf && ready && <PerfHud stats={perfStats} onBatching={perfBatching} onClose={() => setPerf(false)} quality={snapshot.quality} onQuality={(mode) => engine.current?.setQuality(mode)} />}
       {titleScreen && (
         <aside className="city-title" aria-labelledby="city-title-heading">
           <p className="city-title-eyebrow">ANUSH GUPTA PRESENTS</p>

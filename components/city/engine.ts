@@ -9,6 +9,7 @@ import { createSakuraValley } from "./sakura-valley";
 import { cityWeather } from "@/lib/city-weather";
 import { createConstruction } from "./construction";
 import { createWeather } from "./weather";
+import { createQualityGovernor, qualityTiers, type QualityMode, type QualityTier } from "@/lib/render-quality";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
@@ -48,6 +49,7 @@ export type CitySnapshot = {
   activity?: { id: ActivityId; stage: "calling" | "ready" | "riding"; passenger?: boolean } | null;
   nearbyActivity?: ActivityId | null;
   weather?: ReturnType<typeof cityWeather>;
+  quality?: { tier: QualityTier; mode: QualityMode };
 };
 type Options = {
   onEnter: (id: string, floor: number) => void;
@@ -65,12 +67,14 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     antialias: true,
     powerPreference: "high-performance",
   });
-  renderer.setPixelRatio(
-    Math.min(devicePixelRatio, innerWidth < 768 ? 1.75 : 2),
-  );
+  // Small screens start without shadows; slow devices step down further while playing.
+  const governor = createQualityGovernor(innerWidth >= 900 ? "high" : "medium");
+  let quality: QualityMode = "auto",
+    tier = governor.tier;
+  renderer.setPixelRatio(Math.min(devicePixelRatio, qualityTiers[tier].pixelRatio));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
-  renderer.shadowMap.enabled = innerWidth >= 900;
+  renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
   // Post-processing renders several passes per frame; count them all for the engineer HUD.
   renderer.info.autoReset = false;
@@ -100,7 +104,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
   scene.add(ambient);
   const sun = new THREE.DirectionalLight(0xffe3bf, 3.5);
   sun.position.set(-25, 60, 25);
-  sun.castShadow = true;
+  sun.castShadow = qualityTiers[tier].shadows;
   sun.shadow.mapSize.set(2048, 2048);
   Object.assign(sun.shadow.camera, {
     left: -58,
@@ -318,6 +322,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
       nearCar: !activity && !driving && carDistance() < 3.4,
       car: { ...carState },
       weather: living ? cityWeather(worldSeconds) : undefined,
+      quality: { tier, mode: quality },
     });
   }
   function carDistance() {
@@ -534,19 +539,33 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
       composer.insertPass(bloomPass, 1);
     }
     if (bloomPass) bloomPass.enabled = night;
-    inkPass!.enabled = illustrated;
+    inkPass!.enabled = inked();
     inkPass!.uniforms.uResolution.value.copy(size);
     return composer;
+  }
+  function inked() {
+    return illustrated && qualityTiers[tier].ink;
+  }
+  function applyQuality(next: QualityTier) {
+    tier = next;
+    renderer.setPixelRatio(Math.min(devicePixelRatio, qualityTiers[tier].pixelRatio));
+    composer?.setPixelRatio(renderer.getPixelRatio());
+    // Fewer shadow-casting lights recompiles the lit materials once, then skips the shadow pass.
+    sun.castShadow = qualityTiers[tier].shadows;
   }
   function draw() {
     if (lost) return;
     renderer.info.reset();
-    if (illustrated || night) effects().render();
+    if (inked() || night) effects().render();
     else renderer.render(scene, camera);
   }
   function frame(time: number) {
     if (time - lastTime < 1000 / 60 - 1) return;
     const delta = lastTime ? Math.min((time - lastTime) / 1000, 0.1) : 0;
+    if (lastTime && quality === "auto") {
+      const next = governor.sample(time - lastTime);
+      if (next) applyQuality(next);
+    }
     lastTime = time;
     const started = performance.now();
     if (flight) {
@@ -969,6 +988,13 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     boardActivity() { rides.board(); update(); },
     leaveActivity() { stopActivity(); walk(); update(); },
     setIllustrated(value: boolean) { illustrated = value; draw(); },
+    setQuality(mode: QualityMode) {
+      quality = mode;
+      governor.reset();
+      applyQuality(mode === "auto" ? governor.tier : mode);
+      update();
+      draw();
+    },
     setBatching(value: boolean) { batched.setMerged(value); draw(); },
     // Averages since the previous call, so the HUD controls the sample window.
     stats() {
@@ -983,7 +1009,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
         batchedMeshes: batched.before,
         batches: batched.after,
         pixelRatio: renderer.getPixelRatio(),
-        shadows: renderer.shadowMap.enabled,
+        shadows: sun.castShadow,
         gpu,
       };
       frames = 0; busy = 0; sampled = now;
