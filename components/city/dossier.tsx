@@ -21,7 +21,7 @@ export default function Dossier({
     <CityDialog
       open={open && !!building}
       onClose={onClose}
-      label="Floor dossier"
+      label={building?.kind === "project" ? "Project brief" : "Building overview"}
       side="dossier"
     >
       {building && content && (
@@ -33,7 +33,7 @@ export default function Dossier({
             }
           >
             <p className="city-kicker">
-              {building.name} / F{String(floor + 1).padStart(2, "0")}
+              {building.name}
             </p>
             <h2>{content.title}</h2>
             <p>{content.subtitle}</p>

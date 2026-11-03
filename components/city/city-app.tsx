@@ -63,7 +63,7 @@ export default function CityApp() {
   const engine = useRef<ReturnType<typeof createCity>>();
   const actions = useRef<{
     activity: (id: ActivityId) => void;
-    enter: (id: string, floor: number) => void;
+    enter: (id: string, floor: number, reading?: boolean) => void;
     discover: (id: string) => void;
     read: () => void;
     exit: () => void;
@@ -196,7 +196,6 @@ export default function CityApp() {
     setPlace(null);
     if (!mission) {
       setMission({ index: 0, stop: 0 });
-      announce(cityMissions[0].title, `Mission start · go to ${buildingName(cityMissions[0].stops[0])}`);
     }
     setHelp(false);
     setTravel("walk");
@@ -285,7 +284,7 @@ export default function CityApp() {
         if (cancelled) return;
         try {
           engine.current = createCity(canvas.current!, {
-            onEnter: (id, level) => actions.current.enter(id, level),
+            onEnter: (id) => actions.current.enter(id, 0, true),
             onActivity: (id) => actions.current.activity(id),
             onRead: () => actions.current.read(),
             onDiscover: (id) => actions.current.discover(id),
@@ -558,8 +557,8 @@ export default function CityApp() {
             <span key={tour} style={{ animationDuration: `${tourStopSeconds}s` }} />
           </span>
           <div>
-            <button type="button" className="city-primary" onClick={() => { const id = cityTour[tour].id; setTour(null); visit(id); }}>
-              Step inside
+            <button type="button" className="city-primary" onClick={() => { const id = cityTour[tour].id; setTour(null); visit(id, 0, true); }}>
+              Read overview
             </button>
             <button type="button" className="city-secondary" onClick={() => setTour(tour + 1)}>Next</button>
             <button type="button" className="city-secondary" onClick={() => setTour(null)}>Stop</button>
@@ -594,7 +593,7 @@ export default function CityApp() {
               className="city-secondary"
               onClick={() => setDirectory(true)}
             >
-              Choose an address
+              Browse projects
               <ArrowUpRight size={15} />
             </button>
           </div>
@@ -628,13 +627,13 @@ export default function CityApp() {
           <div className="city-guide-avatar" aria-hidden="true">✳</div>
           <div className="city-guide-copy">
             <p>YOUR FIRST DAY IN BUILDVERSE <span>01 / ARRIVAL</span></p>
-            <h2 id="guide-heading">Hey, welcome to my little world.</h2>
-            <p>I’m Anush. Every building here is something I’ve built, learned, or am working on. Where should we begin?</p>
+            <h2 id="guide-heading">Start with a project</h2>
+            <p>Open a project to see what I built. To explore on a phone, drag the left stick to move and swipe the scene to look. Tap any building to read its overview.</p>
             <div className="city-guide-actions">
-              <button onClick={() => { setGuide(false); visit("interview-ace"); }}>01 · InterviewAce ↗</button>
-              <button onClick={() => { setGuide(false); visit("relay-voice"); }}>02 · AI calling ↗</button>
-              <button onClick={() => { setGuide(false); setPlace("courtyard"); setEnterVersion(v => v + 1); }}>03 · After hours ↗</button>
-              <button className="city-guide-skip" onClick={() => setGuide(false)}>I’ll explore · close guide</button>
+              <button onClick={() => { setGuide(false); visit("interview-ace", 0, true); }}>01 · InterviewAce ↗</button>
+              <button onClick={() => { setGuide(false); visit("relay-voice", 0, true); }}>02 · AI calling ↗</button>
+              <button onClick={() => { setGuide(false); setDirectory(true); }}>See all projects ↗</button>
+              <button className="city-guide-skip" onClick={() => setGuide(false)}>Explore the city</button>
             </div>
           </div>
         </aside>
@@ -690,7 +689,7 @@ export default function CityApp() {
               }
             >
               <BookOpen size={15} />
-              {snapshot.mode === "building" ? "Enter floor" : "Read dossier"}
+              {snapshot.mode === "building" ? "Enter floor" : "Read overview"}
             </button>
             <button
               type="button"
@@ -796,7 +795,7 @@ export default function CityApp() {
           </button>
           <button type="button" onClick={() => setDirectory(true)}>
             <Map size={17} />
-            <span>Directory</span>
+            <span>Projects</span>
           </button>
           <button type="button" className="city-mobile-activities" onClick={() => setActivityMenu(true)}>
             <Star size={17} />
@@ -818,11 +817,11 @@ export default function CityApp() {
             </button>
           ) : snapshot.mode === "room" ? (
             <button type="button" onClick={openDossier}>
-              <kbd>E</kbd>Read this floor’s dossier
+              <kbd>E</kbd>Read this floor
               <ArrowUpRight size={14} />
             </button>
           ) : nearby ? (
-            <button type="button" onClick={() => visit(nearby.id, 0)}>
+            <button type="button" onClick={() => visit(nearby.id, 0, true)}>
               <kbd>E</kbd>Enter {nearby.name}
               <ArrowUpRight size={14} />
             </button>
@@ -871,7 +870,7 @@ export default function CityApp() {
       <CityDirectory
         open={directory}
         onClose={() => setDirectory(false)}
-        onVisit={(id) => visit(id, 0)}
+        onVisit={(id) => visit(id, 0, true)}
         onExplore={unavailable ? undefined : (id) => { setDirectory(false); setHelp(false); setTravel("walk"); setPlace(id); setEnterVersion(value => value + 1); updateRoute(null); }}
         visited={visited}
         illustrated={illustrated}
