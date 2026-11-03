@@ -832,7 +832,8 @@ void main() {
         hero.legs.forEach(({ hip, knee }) => { hip.rotation.x = ride.stage === "riding" ? -Math.PI / 2 : 0; knee.rotation.x = ride.stage === "riding" ? Math.PI / 2 : 0; });
       }
     }
-    if (!flight && controls.enabled) controls.update();
+    controls.autoRotate = preview && !preference.matches;
+    if (!flight && (controls.enabled || controls.autoRotate)) controls.update(delta);
     if (mode === "street" && !flight && !activity) avoidWalls();
     draw();
     frames++;
@@ -842,6 +843,7 @@ void main() {
       update();
     }
   }
+  let preview = false;
   function sync() {
     renderer.setAnimationLoop(null);
     lastTime = 0;
@@ -1087,7 +1089,9 @@ void main() {
     setPreview(value: boolean) {
       if (value) overview();
       player.visible = !value && !driving;
-      controls.autoRotate = false;
+      preview = value;
+      controls.autoRotate = value && !preference.matches;
+      controls.autoRotateSpeed = 0.45;
       draw();
     },
     overview,
@@ -1099,10 +1103,6 @@ void main() {
     setCheckpoint(point: CityPoint | null) {
       checkpoint.visible = !!point;
       if (point) checkpoint.position.set(point.x, 3.5, point.z);
-    },
-    setAttract(value: boolean) {
-      controls.autoRotate = value && !preference.matches;
-      controls.autoRotateSpeed = 0.45;
     },
     setMovement(value: CityPoint) {
       pad = value;
