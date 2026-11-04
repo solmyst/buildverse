@@ -144,13 +144,6 @@ export function createFloorRoom(building: CityBuilding, floor: number) {
     "#bca788",
   );
   kit.sphere(root, 0.5, [width / 2 - 0.65, 1.05, -depth / 2 + 0.65], "#6ba78d");
-  kit.label(
-    root,
-    `F${String(floor + 1).padStart(2, "0")} / ${building.floors[floor]}`,
-    [0, 3.9, -depth / 2],
-    building.color,
-    7,
-  );
   const halo = kit.ring(root, 0.6, [0, 0.18, depth / 2 - 0.75], building.color);
   halo.userData.action = "exit";
   return { root, kit, floorY };

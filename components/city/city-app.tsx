@@ -139,7 +139,7 @@ export default function CityApp() {
     if (!building || level < 0 || level >= building.floors.length) return;
     setDirectory(false);
     setHelp(false);
-    setExpanded(window.innerWidth > 650);
+    setExpanded(false);
     updateRoute({ id, floor: level, reading: reading || unavailable });
     setEnterVersion((current) => current + 1);
     if (
@@ -249,7 +249,7 @@ export default function CityApp() {
       setRoute(next);
       if (next) {
         setHelp(false);
-        setExpanded(window.innerWidth > 650);
+        setExpanded(false);
       }
     };
     synchronize();
@@ -411,7 +411,7 @@ export default function CityApp() {
   return (
     <main
       id="main-content"
-      className={`city-app ${titleScreen ? "city-preview" : ""} ${ready ? "city-ready" : ""} ${(living ? snapshot.weather?.night : night) ? "city-night" : ""}`}
+      className={`city-app ${active ? "city-building-focus" : ""} ${titleScreen ? "city-preview" : ""} ${ready ? "city-ready" : ""} ${(living ? snapshot.weather?.night : night) ? "city-night" : ""}`}
       tabIndex={-1}
     >
       <h1 className="sr-only">
@@ -648,6 +648,7 @@ export default function CityApp() {
             className="city-floor-heading"
             onClick={() => setExpanded(!expanded)}
             aria-expanded={expanded}
+            aria-label={`${active.name}, floor ${floor + 1}. Choose a floor`}
             aria-controls="city-floor-list"
           >
             <span>
@@ -657,6 +658,7 @@ export default function CityApp() {
                   : "YOU ARE INSIDE"}
               </small>
               <strong>{active.name}</strong>
+              <small>{active.floors[floor]} · Choose floor</small>
             </span>
             {expanded ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
           </button>
@@ -701,7 +703,7 @@ export default function CityApp() {
             </button>
             <button
               type="button"
-              className="city-secondary"
+              className="city-secondary city-exit-room"
               onClick={goWalking}
             >
               <ArrowDown size={15} />

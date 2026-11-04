@@ -2125,3 +2125,38 @@ button.city-recruiter-link {
     color: #f5f0dc;
   }
 }
+
+/* Keep the room and its floor controls in focus while visiting a building. */
+.city-building-focus .city-topbar,
+.city-building-focus .city-bottom-hud,
+.city-building-focus .city-minimap,
+.city-building-focus .city-dpad,
+.city-building-focus .city-thumbstick,
+.city-building-focus .city-activity-launch,
+.city-building-focus .city-hover-note {
+  display: none;
+}
+
+.city-building-focus .city-floor-actions {
+  grid-template-columns: 1fr 1fr;
+}
+
+.city-building-focus .city-floor-actions > .city-primary {
+  grid-column: auto;
+  order: -2;
+}
+
+.city-building-focus .city-floor-actions > .city-exit-room {
+  order: -1;
+}
+
+.city-building-focus .city-floor-panel:not(.is-expanded) .city-floor-actions > .city-secondary:not(.city-exit-room) {
+  display: none;
+}
+
+@media (max-width: 650px) {
+  .city-building-focus .city-floor-panel {
+    bottom: max(12px, env(safe-area-inset-bottom));
+    max-height: min(50dvh, 360px);
+  }
+}
