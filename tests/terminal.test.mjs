@@ -52,3 +52,15 @@ test("live GitHub data is formatted, forks dropped, empty answers handled", () =
   const log = formatLog([{ type: "PushEvent", created_at: "2025-06-01T00:00:00Z", repo: { name: "solmyst/krate" }, payload: { commits: [{ message: "fix: a\nbody" }] } }]);
   assert.match(log[1].text, /krate\s+fix: a$/);
 });
+const { latestPush, ago } = await import(term);
+test("the shipping-now chip finds the newest push and words its age", () => {
+  const push = latestPush([{ type: "WatchEvent", created_at: "2025-06-02T00:00:00Z", repo: { name: "a/b" }, payload: {} }, { type: "PushEvent", created_at: "2025-06-01T00:00:00Z", repo: { name: "solmyst/krate" }, payload: { commits: [{ message: "x" }, { message: "last\nmore" }] } }]);
+  assert.equal(push.repo, "krate");
+  assert.equal(push.message, "last");
+  assert.equal(latestPush([]), null);
+  const now = new Date("2025-06-03T00:00:00Z");
+  assert.equal(ago(new Date("2025-06-02T23:30:00Z"), now), "30m ago");
+  assert.equal(ago(new Date("2025-06-02T20:00:00Z"), now), "4h ago");
+  assert.equal(ago(push.when, now), "2d ago");
+  assert.match(runCommand("jobs").lines[0].text, /@/);
+});

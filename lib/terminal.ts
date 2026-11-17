@@ -26,8 +26,21 @@ const projectBuildings = cityBuildings.filter((building) => building.kind === "p
 
 export const commands = [
   "help", "whoami", "ls", "cd", "cat", "skills", "stack", "neofetch", "repos", "git", "hire", "resume",
-  "contact", "tour", "night", "day", "xray", "perf", "overview", "clear", "history",
+  "contact", "tour", "night", "day", "xray", "perf", "overview", "clear", "history", "jobs", "certs", "fun",
 ] as const;
+
+// The newest push in a public event feed, for the "shipping now" chip.
+export function latestPush(events: PushEvent[]) {
+  const event = events.find((item) => item.type === "PushEvent");
+  if (!event) return null;
+  return { repo: event.repo.name.split("/").pop() ?? "", when: new Date(event.created_at), message: event.payload.commits?.at(-1)?.message.split("\n")[0] ?? "" };
+}
+export function ago(then: Date, now = new Date()) {
+  const minutes = Math.max(0, Math.round((+now - +then) / 60000));
+  if (minutes < 60) return `${minutes || 1}m ago`;
+  if (minutes < 1440) return `${Math.round(minutes / 60)}h ago`;
+  return `${Math.round(minutes / 1440)}d ago`;
+}
 
 // Matches an id, a name or a fragment of either ("relay", "krate", "interview").
 export function findBuilding(query: string) {
@@ -172,6 +185,9 @@ function help(): TermResult {
     row("git log", "my latest commits, live"),
     row("whoami", "the short version"),
     row("neofetch", "system info, but it's me"),
+    row("jobs", "where I've worked, and what I shipped"),
+    row("certs", "certifications"),
+    row("fun", "outside of code"),
     row("tour", "the 60-second autopilot tour"),
     row("hire", "how to reach me"),
     row("night / day / xray / perf", "play with the engine"),
@@ -216,6 +232,9 @@ export function runCommand(input: string, history: string[] = []): TermResult {
     case "perf": return out([say("Engine panel toggled. It shows live draw calls, fps and the GPU.", "ok")], { type: "perf" });
     case "overview": return out([say("Back to the skyline.", "ok")], { type: "overview" }, { type: "unhighlight" });
     case "clear": return out([], { type: "clear" });
+    case "jobs": return out(experiences.flatMap((job) => [say(`${job.role} @ ${job.company}`, "accent"), say(`${job.period} · ${job.location}`, "dim"), ...job.achievements.slice(0, 3).map((line) => say(`  • ${line}`)), blank]));
+    case "certs": return out(personal.certifications.map((line) => say(`  ✓ ${line}`)));
+    case "fun": return out([say(personal.outsideCode)]);
     case "history": return out(history.map((line, i) => say(`  ${String(i + 1).padStart(3)}  ${line}`, "dim")));
     case "exit": case "quit": return out([say("There is no exit. Only the city. (Press Esc to close this.)", "dim")]);
     case "currently": return out(Object.entries(currently).map(([key, value]) => say(`  ${key}: ${value}`)));

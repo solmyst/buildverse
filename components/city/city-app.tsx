@@ -40,6 +40,7 @@ import Dossier from "./dossier";
 import CityMinimap from "./minimap";
 import PerfHud from "./perf-hud";
 import Terminal from "./terminal";
+import GithubPulse from "./github-pulse";
 import type { TermAction } from "@/lib/terminal";
 import HireCard from "./hire-card";
 import { cityTour, tourStopSeconds } from "@/lib/city-tour";
@@ -643,6 +644,12 @@ export default function CityApp() {
           <button type="button" className="city-recruiter-link" onClick={startTour}>
             <Play size={13} /> Watch the 60-second tour
           </button>
+          <p className="city-title-hint">
+            <button type="button" className="city-recruiter-link" onClick={() => { startJourney(); setTerminal(true); }}>
+              <kbd>/</kbd> Prefer a terminal? Type <code>help</code>, or just click.
+            </button>
+          </p>
+          <GithubPulse />
           <ul className="city-title-controls">
             <li>
               <kbd>W A S D</kbd>Move
@@ -665,7 +672,7 @@ export default function CityApp() {
           </ul>
         </aside>
       )}
-      {guide && !titleScreen && !active && !directory && (
+      {guide && !titleScreen && !active && !directory && !terminal && (
         <aside className="city-guide" aria-labelledby="guide-heading">
           <div className="city-guide-avatar" aria-hidden="true">✳</div>
           <div className="city-guide-copy">
