@@ -52,7 +52,7 @@ export type CitySnapshot = {
   quality?: { tier: QualityTier; mode: QualityMode };
 };
 type Options = {
-  onEnter: (id: string, floor: number) => void;
+  onEnter: (id: string) => void;
   onActivity: (id: ActivityId) => void;
   onRead: () => void;
   onDiscover: (id: string) => void;
@@ -835,7 +835,8 @@ void main() {
         hero.legs.forEach(({ hip, knee }) => { hip.rotation.x = ride.stage === "riding" ? -Math.PI / 2 : 0; knee.rotation.x = ride.stage === "riding" ? Math.PI / 2 : 0; });
       }
     }
-    if (!flight && controls.enabled) controls.update();
+    controls.autoRotate = preview && !preference.matches;
+    if (!flight && (controls.enabled || controls.autoRotate)) controls.update(delta);
     if (mode === "street" && !flight && !activity) avoidWalls();
     draw();
     frames++;
@@ -845,6 +846,7 @@ void main() {
       update();
     }
   }
+  let preview = false;
   function sync() {
     renderer.setAnimationLoop(null);
     lastTime = 0;
@@ -926,7 +928,7 @@ void main() {
       if (mode === "room") options.onRead();
       else {
         const building = nearestDoor(position);
-        if (building) options.onEnter(building.id, 0);
+        if (building) options.onEnter(building.id);
       }
     }
   }
@@ -969,7 +971,7 @@ void main() {
         : target?.userData.action === "read"
         ? "Open this floor’s dossier"
         : building
-          ? `${building.name} / F${String(floorAt(building, target!, hit!) + 1).padStart(2, "0")}`
+          ? `${building.name} · Read overview`
           : "";
     if (text !== lastHover) {
       lastHover = text;
@@ -1012,12 +1014,8 @@ void main() {
     else if (object?.userData.action === "exit") options.onExit();
     else if (object?.userData.buildingId) {
       const building = cityBuildings.find((item) => item.id === object!.userData.buildingId);
-      if (building) options.onEnter(building.id, floorAt(building, object, hit));
+      if (building) options.onEnter(building.id);
     }
-  }
-  // Building floors are batched into one mesh, so an unlabelled hit takes its floor from its height.
-  function floorAt(building: CityBuilding, target: THREE.Object3D, hit: THREE.Intersection) {
-    return target.userData.floor ?? THREE.MathUtils.clamp(Math.floor((hit.point.y - 0.5) / floorHeight), 0, building.floors.length - 1);
   }
   function contextLost(event: Event) {
     event.preventDefault();
@@ -1090,7 +1088,9 @@ void main() {
     setPreview(value: boolean) {
       if (value) overview();
       player.visible = !value && !driving;
-      controls.autoRotate = false;
+      preview = value;
+      controls.autoRotate = value && !preference.matches;
+      controls.autoRotateSpeed = 0.45;
       draw();
     },
     overview,
@@ -1102,10 +1102,6 @@ void main() {
     setCheckpoint(point: CityPoint | null) {
       checkpoint.visible = !!point;
       if (point) checkpoint.position.set(point.x, 3.5, point.z);
-    },
-    setAttract(value: boolean) {
-      controls.autoRotate = value && !preference.matches;
-      controls.autoRotateSpeed = 0.45;
     },
     setMovement(value: CityPoint) {
       pad = value;

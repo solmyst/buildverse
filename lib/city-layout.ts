@@ -307,8 +307,8 @@ export function lanePoint(lane: TrafficLane, s: number) {
 export const cityMissions = [
   {
     id: "recruiter",
-    title: "The Recruiter's Tour",
-    stops: ["about", "interview-ace", "relay-voice", "contact"],
+    title: "Project trail",
+    stops: ["interview-ace", "relay-voice", "about", "contact"],
   },
   {
     id: "engineer",

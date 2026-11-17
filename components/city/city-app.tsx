@@ -63,7 +63,7 @@ export default function CityApp() {
   const engine = useRef<ReturnType<typeof createCity>>();
   const actions = useRef<{
     activity: (id: ActivityId) => void;
-    enter: (id: string, floor: number) => void;
+    enter: (id: string, floor: number, reading?: boolean) => void;
     discover: (id: string) => void;
     read: () => void;
     exit: () => void;
@@ -139,7 +139,7 @@ export default function CityApp() {
     if (!building || level < 0 || level >= building.floors.length) return;
     setDirectory(false);
     setHelp(false);
-    setExpanded(window.innerWidth > 650);
+    setExpanded(false);
     // Walking into a different building opens its story at once; no second click is needed.
     const entering = routeRef.current?.id !== id;
     updateRoute({ id, floor: level, reading: reading || unavailable || entering });
@@ -198,7 +198,6 @@ export default function CityApp() {
     setPlace(null);
     if (!mission) {
       setMission({ index: 0, stop: 0 });
-      announce(cityMissions[0].title, `Mission start · go to ${buildingName(cityMissions[0].stops[0])}`);
     }
     setHelp(false);
     setTravel("walk");
@@ -256,7 +255,7 @@ export default function CityApp() {
       setRoute(next);
       if (next) {
         setHelp(false);
-        setExpanded(window.innerWidth > 650);
+        setExpanded(false);
       }
     };
     synchronize();
@@ -291,7 +290,7 @@ export default function CityApp() {
         if (cancelled) return;
         try {
           engine.current = createCity(canvas.current!, {
-            onEnter: (id, level) => actions.current.enter(id, level),
+            onEnter: (id) => actions.current.enter(id, 0, true),
             onActivity: (id) => actions.current.activity(id),
             onRead: () => actions.current.read(),
             onDiscover: (id) => actions.current.discover(id),
@@ -418,7 +417,7 @@ export default function CityApp() {
   return (
     <main
       id="main-content"
-      className={`city-app ${titleScreen ? "city-preview" : ""} ${ready ? "city-ready" : ""} ${(living ? snapshot.weather?.night : night) ? "city-night" : ""}`}
+      className={`city-app ${active ? "city-building-focus" : ""} ${titleScreen ? "city-preview" : ""} ${ready ? "city-ready" : ""} ${(living ? snapshot.weather?.night : night) ? "city-night" : ""}`}
       tabIndex={-1}
     >
       <h1 className="sr-only">
@@ -564,8 +563,8 @@ export default function CityApp() {
             <span key={tour} style={{ animationDuration: `${tourStopSeconds}s` }} />
           </span>
           <div>
-            <button type="button" className="city-primary" onClick={() => { const id = cityTour[tour].id; setTour(null); visit(id); }}>
-              Step inside
+            <button type="button" className="city-primary" onClick={() => { const id = cityTour[tour].id; setTour(null); visit(id, 0, true); }}>
+              Read overview
             </button>
             <button type="button" className="city-secondary" onClick={() => setTour(tour + 1)}>Next</button>
             <button type="button" className="city-secondary" onClick={() => setTour(null)}>Stop</button>
@@ -605,12 +604,12 @@ export default function CityApp() {
               className="city-secondary"
               onClick={() => setDirectory(true)}
             >
-              Choose an address
+              Browse projects
               <ArrowUpRight size={15} />
             </button>
           </div>
           <button type="button" className="city-recruiter-link" onClick={startTour}>
-            <Play size={13} /> No time to explore? Watch the 60-second autopilot tour
+            <Play size={13} /> Watch the 60-second tour
           </button>
           <ul className="city-title-controls">
             <li>
@@ -645,11 +644,13 @@ export default function CityApp() {
               <li><b>Its story opens:</b> the problem, what I built, the result.</li>
               <li><b>Hit “Next project”</b> to keep going, or take the 60-second tour.</li>
             </ol>
+            <p className="city-guide-touch">On a phone: drag the left stick to move, swipe the scene to look, tap a building to open it.</p>
             <div className="city-guide-actions">
               {["interview-ace", "relay-voice"].map((id, index) => (
                 <button key={id} onClick={() => { setGuide(false); visit(id); }}>0{index + 1} · {buildingName(id)} ↗</button>
               ))}
               <button onClick={() => { setGuide(false); startTour(); }}>60-second tour ↗</button>
+              <button onClick={() => { setGuide(false); setDirectory(true); }}>See all projects ↗</button>
               <button className="city-guide-skip" onClick={() => setGuide(false)}>I’ll explore · close guide</button>
             </div>
           </div>
@@ -665,6 +666,7 @@ export default function CityApp() {
             className="city-floor-heading"
             onClick={() => setExpanded(!expanded)}
             aria-expanded={expanded}
+            aria-label={`${active.name}, floor ${floor + 1}. Choose a floor`}
             aria-controls="city-floor-list"
           >
             <span>
@@ -674,6 +676,7 @@ export default function CityApp() {
                   : "YOU ARE INSIDE"}
               </small>
               <strong>{active.name}</strong>
+              <small>{active.floors[floor]} · Choose floor</small>
             </span>
             {expanded ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
           </button>
@@ -706,7 +709,7 @@ export default function CityApp() {
               }
             >
               <BookOpen size={15} />
-              {snapshot.mode === "building" ? "Enter floor" : "Read dossier"}
+              {snapshot.mode === "building" ? "Enter floor" : "Read overview"}
             </button>
             <button
               type="button"
@@ -718,7 +721,7 @@ export default function CityApp() {
             </button>
             <button
               type="button"
-              className="city-secondary"
+              className="city-secondary city-exit-room"
               onClick={goWalking}
             >
               <ArrowDown size={15} />
@@ -812,7 +815,11 @@ export default function CityApp() {
           </button>
           <button type="button" onClick={() => setDirectory(true)}>
             <Map size={17} />
-            <span>Directory</span>
+            <span>Projects</span>
+          </button>
+          <button type="button" className="city-mobile-activities" onClick={() => setActivityMenu(true)}>
+            <Star size={17} />
+            <span>Activities</span>
           </button>
         </div>
         <div className="city-interact">
@@ -830,11 +837,11 @@ export default function CityApp() {
             </button>
           ) : snapshot.mode === "room" ? (
             <button type="button" onClick={openDossier}>
-              <kbd>E</kbd>Read this floor’s dossier
+              <kbd>E</kbd>Read this floor
               <ArrowUpRight size={14} />
             </button>
           ) : nearby ? (
-            <button type="button" onClick={() => visit(nearby.id, 0)}>
+            <button type="button" onClick={() => visit(nearby.id, 0, true)}>
               <kbd>E</kbd>Enter {nearby.name}
               <ArrowUpRight size={14} />
             </button>
@@ -883,7 +890,7 @@ export default function CityApp() {
       <CityDirectory
         open={directory}
         onClose={() => setDirectory(false)}
-        onVisit={(id) => visit(id, 0)}
+        onVisit={(id) => visit(id, 0, true)}
         onExplore={unavailable ? undefined : (id) => { setDirectory(false); setHelp(false); setTravel("walk"); setPlace(id); setEnterVersion(value => value + 1); updateRoute(null); }}
         visited={visited}
         illustrated={illustrated}

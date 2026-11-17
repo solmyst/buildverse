@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { ArrowUpRight, Building2, Search } from "lucide-react";
+import { floorContent } from "@/lib/city-content";
 import { cityBuildings } from "@/lib/city-layout";
 import { valleyPlaces } from "@/lib/valley-motion";
 import CityDialog from "./dialog";
@@ -39,17 +40,15 @@ export default function CityDirectory({
     <CityDialog
       open={open}
       onClose={onClose}
-      label="City directory"
+      label="Projects and places"
       side="directory"
     >
       <div className="directory-intro">
         <p className="city-kicker">ANUSH’S DATA SOCIETY</p>
         <h2>
-          Everything has
-          <br />
-          an address.
+          Projects and places
         </h2>
-        <p>Choose a building. Take the elevator. Step inside the story.</p>
+        <p>Pick a project to read what I built, or explore a place in the city.</p>
         <a href="https://anush.tech/" className="city-recruiter-link">Prefer a quick read? Projects, experience & resume ↗</a>
       </div>
       <div className="directory-controls">
@@ -97,7 +96,7 @@ export default function CityDirectory({
               <small>
                 {building.floors.length} floors ·{" "}
                 {building.kind === "project"
-                  ? "Project building"
+                  ? floorContent(building, 0).subtitle
                   : "Life & work"}
                 {visited.includes(building.id) ? " · Visited" : ""}
               </small>
