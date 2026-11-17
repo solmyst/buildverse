@@ -57,6 +57,14 @@ export function buildDistrict(parent: THREE.Group, kit: SceneKit) {
     },
   };
 }
+// A display is read from a distance, so it shows two short lines, not the whole dossier.
+function screenText(content: ReturnType<typeof floorContent>) {
+  const [, built, result] = content.glance ?? [];
+  if (built && result) return `${built.label}: ${built.text}\n${result.label}: ${result.text}`;
+  const section = content.sections[0];
+  const text = section?.text ?? section?.bullets?.join(" · ") ?? content.subtitle;
+  return text.length > 190 ? `${text.slice(0, 189).replace(/\s+\S*$/, "")}…` : text;
+}
 export function createFloorRoom(building: CityBuilding, floor: number) {
   const kit = createSceneKit();
   const root = new THREE.Group();
@@ -80,14 +88,12 @@ export function createFloorRoom(building: CityBuilding, floor: number) {
   kit.box(root, [0.1, 0.12, depth], [-width / 2, 3.1, 0], building.color);
   const display = new THREE.Mesh(
     kit.track(new THREE.PlaneGeometry(width * 0.79, 2.5)),
-    kit.track(
+    kit.textSurface(
       new THREE.MeshBasicMaterial({
         map: kit.screenTexture(
           content.title,
           `${building.name} / Floor ${floor + 1}`,
-          content.sections[0]?.text ??
-            content.sections[0]?.bullets?.join(" · ") ??
-            content.subtitle,
+          screenText(content),
           building.color,
         ),
       }),

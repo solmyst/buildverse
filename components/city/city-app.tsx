@@ -139,7 +139,9 @@ export default function CityApp() {
     setDirectory(false);
     setHelp(false);
     setExpanded(window.innerWidth > 650);
-    updateRoute({ id, floor: level, reading: reading || unavailable });
+    // Walking into a different building opens its story at once; no second click is needed.
+    const entering = routeRef.current?.id !== id;
+    updateRoute({ id, floor: level, reading: reading || unavailable || entering });
     setEnterVersion((current) => current + 1);
     if (
       !visited.includes(id) &&
@@ -235,9 +237,13 @@ export default function CityApp() {
     play: startJourney,
   };
   useEffect(() => {
+    let firstLoad = true;
     const synchronize = () => {
       setPlace(null);
-      const next = parseCityRoute(window.location.hash);
+      let next = parseCityRoute(window.location.hash);
+      // A shared floor link lands on the story, not on an empty room.
+      if (next && firstLoad && !next.reading) next = { ...next, reading: true };
+      firstLoad = false;
       if (
         next?.id !== routeRef.current?.id ||
         next?.floor !== routeRef.current?.floor
@@ -578,6 +584,11 @@ export default function CityApp() {
           <p className="city-title-tagline">
             {cityBuildings.length} buildings. Nine projects. One city you can walk.
           </p>
+          <ol className="city-title-steps">
+            <li><b>1</b> Pick a building</li>
+            <li><b>2</b> Its project story opens</li>
+            <li><b>3</b> Hit “Next project”</li>
+          </ol>
           <a href="https://anush.tech/" className="city-recruiter-link">Short on time? Read my quick portfolio ↗</a>
           <div className="city-title-actions">
             <button type="button" className="city-play" onClick={startJourney}>
@@ -623,13 +634,18 @@ export default function CityApp() {
         <aside className="city-guide" aria-labelledby="guide-heading">
           <div className="city-guide-avatar" aria-hidden="true">✳</div>
           <div className="city-guide-copy">
-            <p>YOUR FIRST DAY IN BUILDVERSE <span>01 / ARRIVAL</span></p>
-            <h2 id="guide-heading">Hey, welcome to my little world.</h2>
-            <p>I’m Anush. Every building here is something I’ve built, learned, or am working on. Where should we begin?</p>
+            <p>HOW THIS WORKS <span>3 STEPS</span></p>
+            <h2 id="guide-heading">Every building is one of my projects.</h2>
+            <ol className="city-guide-steps">
+              <li><b>Walk up to a building</b> and press <kbd>E</kbd>, or click it.</li>
+              <li><b>Its story opens:</b> the problem, what I built, the result.</li>
+              <li><b>Hit “Next project”</b> to keep going, or take the 60-second tour.</li>
+            </ol>
             <div className="city-guide-actions">
-              <button onClick={() => { setGuide(false); visit("interview-ace"); }}>01 · InterviewAce ↗</button>
-              <button onClick={() => { setGuide(false); visit("relay-voice"); }}>02 · AI calling ↗</button>
-              <button onClick={() => { setGuide(false); setPlace("courtyard"); setEnterVersion(v => v + 1); }}>03 · After hours ↗</button>
+              {["interview-ace", "relay-voice"].map((id, index) => (
+                <button key={id} onClick={() => { setGuide(false); visit(id); }}>0{index + 1} · {buildingName(id)} ↗</button>
+              ))}
+              <button onClick={() => { setGuide(false); startTour(); }}>60-second tour ↗</button>
               <button className="city-guide-skip" onClick={() => setGuide(false)}>I’ll explore · close guide</button>
             </div>
           </div>
@@ -834,7 +850,7 @@ export default function CityApp() {
           <p>ADDRESSES · {discoveries.length}/4 SECRETS</p>
         </button>
       </footer>
-      <button className="city-activity-launch" type="button" onClick={() => setActivityMenu(true)}>✳ Things to do</button>
+      {snapshot.mode !== "room" && <button className="city-activity-launch" type="button" onClick={() => setActivityMenu(true)}>✳ Things to do</button>}
       {snapshot.nearbyActivity && !snapshot.activity && !titleScreen && !route && (
         <button className="city-activity-nearby" type="button" onClick={() => { launchActivity(snapshot.nearbyActivity!); }}>
           <kbd>E</kbd> {activities.find(a => a.id === snapshot.nearbyActivity)?.name}
@@ -880,6 +896,7 @@ export default function CityApp() {
         open={!!route?.reading}
         onClose={closeDossier}
         onFloor={(next) => active && visit(active.id, next, true)}
+        onNext={(next) => (next ? visit(next.id, 0, true) : (closeDossier(), setHire(true)))}
       />
     </main>
   );

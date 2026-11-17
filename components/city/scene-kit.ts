@@ -3,6 +3,7 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 export function createSceneKit() {
   const resources: Array<{ dispose: () => void }> = [];
+  const textSurfaces: THREE.Material[] = [];
   const track = <T extends { dispose: () => void }>(resource: T): T => {
     resources.push(resource);
     return resource;
@@ -122,6 +123,12 @@ export function createSceneKit() {
     labels.set(key, texture);
     return texture;
   }
+  // Unlit text ignores the lights, so it stays at full brightness in a dark city. The
+  // engine scales these colours down at night to stop the glare.
+  function textSurface<T extends THREE.Material>(material: T) {
+    textSurfaces.push(material);
+    return track(material);
+  }
   function label(
     parent: THREE.Object3D,
     text: string,
@@ -130,7 +137,7 @@ export function createSceneKit() {
     width = 8,
   ) {
     const sprite = new THREE.Sprite(
-      track(
+      textSurface(
         new THREE.SpriteMaterial({
           map: textTexture(text, color),
           depthTest: true,
@@ -171,41 +178,35 @@ export function createSceneKit() {
     context.fillRect(0, 0, 1024, 640);
     context.fillStyle = color;
     context.fillRect(0, 0, 1024, 10);
-    context.font = "22px monospace";
-    context.fillText(subtitle.toUpperCase(), 55, 75, 920);
-    context.font = "bold 49px Arial";
-    const titleWords = title.split(" ");
-    let line = "",
-      y = 155;
-    for (const word of titleWords) {
-      if (context.measureText(line + word).width > 900) {
-        context.fillText(line, 55, y);
-        y += 58;
-        line = "";
+    context.font = "24px monospace";
+    context.fillText(subtitle.toUpperCase(), 55, 70, 920);
+    context.font = "bold 62px Arial";
+    context.fillStyle = "#f2f7f6";
+    const wrap = (value: string, step: number, y: number, limit: number) => {
+      let line = "";
+      for (const word of value.split(" ")) {
+        if (context.measureText(line + word).width > 920 && line) {
+          if (y > limit) return y;
+          context.fillText(line.trim(), 55, y);
+          y += step;
+          line = "";
+        }
+        line += word + " ";
       }
-      line += word + " ";
-    }
-    context.fillText(line, 55, y);
-    y += 70;
-    context.font = "27px Arial";
-    context.fillStyle = "#bacdd1";
-    line = "";
-    for (const word of text.slice(0, 290).split(" ")) {
-      if (context.measureText(line + word).width > 900) {
-        context.fillText(line, 55, y);
-        y += 40;
-        line = "";
-        if (y > 500) break;
-      }
-      line += word + " ";
-    }
-    if (y <= 500) context.fillText(line, 55, y);
+      if (y <= limit) context.fillText(line.trim(), 55, y);
+      return y + step;
+    };
+    let y = wrap(title, 70, 150, 300) + 10;
+    // Paragraphs are separated by a newline so each one starts on its own line.
+    context.font = "36px Arial";
+    context.fillStyle = "#d9e6e9";
+    for (const paragraph of text.split("\n")) y = wrap(paragraph, 46, y, 505) + 8;
     context.font = "22px monospace";
     context.fillStyle = color;
     context.fillText(
-      "SELECT THIS DISPLAY TO OPEN THE COMPLETE DOSSIER  ↗",
+      "SELECT TO READ THE FULL STORY  ↗",
       55,
-      590,
+      600,
       920,
     );
     const texture = track(new THREE.CanvasTexture(canvas));
@@ -295,6 +296,10 @@ export function createSceneKit() {
     material,
     finish,
     screenTexture,
+    textSurface,
+    setNight(night: boolean) {
+      textSurfaces.forEach((material) => (material as THREE.SpriteMaterial).color.setScalar(night ? 0.7 : 1));
+    },
     dispose() {
       resources.forEach((resource) => resource.dispose());
     },

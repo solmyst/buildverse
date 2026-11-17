@@ -272,6 +272,8 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
       district.setNight(dark);
       heroCar.setNight(dark);
       island.setNight(dark);
+      kit.setNight(dark);
+      room?.kit.setNight(dark);
     }
   }
   let mode: CitySnapshot["mode"] = "overview",
@@ -494,6 +496,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     district.blocks.get(id)!.root.visible = false;
     district.blocks.forEach((block) => { block.name.visible = false; });
     room = createFloorRoom(building, floor);
+    room.kit.setNight(night);
     scene.add(room.root);
     position = { x: building.x, z: building.z + 1.8 };
     player.position.set(position.x, room.floorY + 0.18, position.z);
@@ -535,7 +538,7 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
       composer.setSize(size.x, size.y);
     }
     if (night && !bloomPass) {
-      bloomPass = new UnrealBloomPass(new THREE.Vector2(size.x, size.y), 0.6, 0.45, 0.9);
+      bloomPass = new UnrealBloomPass(new THREE.Vector2(size.x, size.y), 0.3, 0.4, 0.95);
       composer.insertPass(bloomPass, 1);
     }
     if (bloomPass) bloomPass.enabled = night;

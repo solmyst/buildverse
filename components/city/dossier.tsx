@@ -1,6 +1,6 @@
 "use client";
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
-import { floorContent } from "@/lib/city-content";
+import { floorContent, nextProject } from "@/lib/city-content";
 import { type CityBuilding } from "@/lib/city-layout";
 import CityDialog from "./dialog";
 export default function Dossier({
@@ -9,14 +9,19 @@ export default function Dossier({
   open,
   onClose,
   onFloor,
+  onNext,
 }: {
   building: CityBuilding | null;
   floor: number;
   open: boolean;
   onClose: () => void;
   onFloor: (floor: number) => void;
+  // Shown on the last floor of a project: where to go after reading it.
+  onNext?: (building: CityBuilding | null) => void;
 }) {
   const content = building ? floorContent(building, floor) : null;
+  const last = !!building && floor === building.floors.length - 1;
+  const upNext = building && last && onNext && building.kind === "project" ? nextProject(building.id) : null;
   return (
     <CityDialog
       open={open && !!building}
@@ -39,6 +44,16 @@ export default function Dossier({
             <p>{content.subtitle}</p>
           </div>
           <div className="dossier-copy">
+            {content.glance && (
+              <dl className="dossier-glance" aria-label="At a glance">
+                {content.glance.map((row) => (
+                  <div key={row.label}>
+                    <dt>{row.label}</dt>
+                    <dd>{row.text}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
             {content.sections.map((section, index) => (
               <section key={`${section.heading}-${index}`}>
                 <h3>{section.heading}</h3>
@@ -79,14 +94,21 @@ export default function Dossier({
             <span>
               {floor + 1} / {building.floors.length}
             </span>
-            <button
-              type="button"
-              disabled={floor === building.floors.length - 1}
-              onClick={() => onFloor(floor + 1)}
-            >
-              Next floor
-              <ArrowRight size={16} />
-            </button>
+            {last && onNext && building.kind === "project" ? (
+              <button type="button" className="dossier-next" onClick={() => onNext(upNext)}>
+                {upNext ? `Next project: ${upNext.name}` : "Done? Get in touch"}
+                <ArrowRight size={16} />
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={last}
+                onClick={() => onFloor(floor + 1)}
+              >
+                Next floor
+                <ArrowRight size={16} />
+              </button>
+            )}
           </div>
         </>
       )}

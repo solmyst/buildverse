@@ -12,9 +12,26 @@ import { cityBuildings, type CityBuilding } from "@/lib/city-layout";
 export type FloorContent = {
   title: string;
   subtitle: string;
+  // Short rows (problem, what I built, result, stack) shown before the long text.
+  glance?: { label: string; text: string }[];
   sections: { heading: string; text?: string; bullets?: string[] }[];
   links: { label: string; href: string }[];
 };
+// The project after this one, in city order, so a visitor can read all nine in a row.
+export function nextProject(id: string): CityBuilding | null {
+  const list = cityBuildings.filter((building) => building.kind === "project");
+  const index = list.findIndex((building) => building.id === id);
+  return index >= 0 ? (list[index + 1] ?? null) : null;
+}
+// First sentence, trimmed to one readable line.
+export function firstSentence(text: string, max = 150) {
+  const sentence = text.trim().split(/(?<=[.!?])\s/)[0];
+  if (sentence.length <= max) return sentence;
+  // Cut at a comma when one is near the end, so the line stops on a whole phrase.
+  const cut = sentence.slice(0, max - 1);
+  const comma = cut.lastIndexOf(",");
+  return `${comma > max * 0.6 ? cut.slice(0, comma) : cut.replace(/\s+\S*$/, "")}…`;
+}
 export function floorContent(
   building: CityBuilding,
   floor: number,
@@ -30,12 +47,18 @@ export function floorContent(
     const project = projects.find((item) => item.id === building.id);
     if (!project) return result;
     result.subtitle = project.tagline;
-    if (level === 0)
+    if (level === 0) {
+      result.glance = [
+        { label: "The problem", text: firstSentence(project.userProblem) },
+        { label: "What I built", text: firstSentence(project.whatIBuilt) },
+        { label: "Result", text: firstSentence(project.outcome) },
+        { label: "Built with", text: project.stack.slice(0, 5).join(" · ") },
+      ];
       result.sections = [
         { heading: "The problem", text: project.userProblem },
         { heading: "What works today", text: project.outcome },
       ];
-    else if (level === 1)
+    } else if (level === 1)
       result.sections = [
         { heading: "What I built", text: project.whatIBuilt },
         { heading: "Technology stack", bullets: project.stack },
