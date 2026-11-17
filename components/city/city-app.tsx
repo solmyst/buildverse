@@ -124,6 +124,7 @@ export default function CityApp() {
     cityBuildings.find((building) => building.id === route?.id) ?? null;
   const floor = route?.floor ?? 0;
   function updateRoute(next: CityRoute | null, replace = false) {
+    setTour(null);
     routeRef.current = next;
     setRoute(next);
     window.history[replace ? "replaceState" : "pushState"](
@@ -239,6 +240,7 @@ export default function CityApp() {
   useEffect(() => {
     let firstLoad = true;
     const synchronize = () => {
+      setTour(null);
       setPlace(null);
       let next = parseCityRoute(window.location.hash);
       // A shared floor link lands on the story, not on an empty room.
@@ -402,7 +404,9 @@ export default function CityApp() {
       return;
     }
     engine.current?.inspect(cityTour[tour].id);
-    const timer = setTimeout(() => setTour(tour + 1), tourStopSeconds * 1000);
+    const timer = setTimeout(() => {
+      setTour((current) => current === tour ? tour + 1 : current);
+    }, tourStopSeconds * 1000);
     return () => clearTimeout(timer);
   }, [ready, tour]);
   useEffect(() => setCopied(false), [route?.id, route?.floor]);
