@@ -14,6 +14,7 @@ story: the problem and outcome, the engineering, and the decisions.
 - **60-second autopilot tour:** the camera flies through six stops (about me,
   three flagship projects, skills, contact) and ends on a Hire card with email,
   resume, LinkedIn and GitHub.
+- **Terminal:** press <kbd>/</kbd> (or <kbd>Cmd/Ctrl+K</kbd>) for a command line over the city. `ls`, `cat krate`, `cd krate`, `skills react` (lights up the buildings that prove a skill), `repos` and `git log` (live from the GitHub API), `hire`. Every answer is also clickable, so no typing is needed.
 - **Directory:** a searchable list of every address, projects first. It also
   works when WebGL is unavailable.
 - **Deep links:** every floor has a shareable URL, for example
@@ -34,6 +35,7 @@ from the renderer, so you can check every claim below yourself.
 | Blueprint X-ray | Swaps every mesh to a fresnel-rim additive shader, one colour per material. You see through the city, and each colour is a separate draw call. Press <kbd>X</kbd>. | [`engine.ts`](components/city/engine.ts) |
 | Illustrated rendering | A single post-process pass draws ink edges from the colour buffer with five samples, instead of a separate ID/depth/normal pipeline. | [`illustration-pass.ts`](components/city/illustration-pass.ts) |
 | Live renderer stats | `renderer.info` is reset by hand once per frame, so counts include shadow and post-processing passes, not only the last pass. | [`perf-hud.tsx`](components/city/perf-hud.tsx) |
+| Terminal | A command parser in plain TypeScript (`lib/terminal.ts`, unit-tested) drives the city: it flies the camera, opens stories, lights up buildings by technology and reads live repos and commits from GitHub, with an offline fallback. | [`terminal.tsx`](components/city/terminal.tsx) |
 | Build-time share image | The Open Graph image draws the real skyline from the building data, one bar per building scaled by floor count. | [`app/og.png/route.tsx`](app/og.png/route.tsx) |
 
 ### Measured

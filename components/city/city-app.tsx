@@ -18,6 +18,7 @@ import {
   Pause,
   Play,
   Star,
+  SquareTerminal,
   Sun,
 } from "lucide-react";
 import {
@@ -38,6 +39,8 @@ import { activities, type ActivityId } from "@/lib/city-activities";
 import Dossier from "./dossier";
 import CityMinimap from "./minimap";
 import PerfHud from "./perf-hud";
+import Terminal from "./terminal";
+import type { TermAction } from "@/lib/terminal";
 import HireCard from "./hire-card";
 import { cityTour, tourStopSeconds } from "@/lib/city-tour";
 import DirectionPad from "./dpad";
@@ -98,6 +101,7 @@ export default function CityApp() {
     [paused, setPaused] = useState(false);
   const [hover, setHover] = useState("");
   const [perf, setPerf] = useState(false);
+  const [terminal, setTerminal] = useState(false);
   const [xray, setXray] = useState(false);
   const [tour, setTour] = useState<number | null>(null);
   const [hire, setHire] = useState(false);
@@ -218,7 +222,9 @@ export default function CityApp() {
     try { setDiscoveries(restoreDiscoveries(sessionStorage.getItem("solmyst-discoveries"))); } catch { /* Optional storage. */ }
     let progress = 0;
     const handler = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setTerminal((value) => !value); return; }
       if (event.repeat || (event.target as HTMLElement)?.closest("input,textarea,dialog,[contenteditable=true]")) return;
+      if (event.key === "/") { event.preventDefault(); setTerminal(true); return; }
       if (event.key === "~" || event.key === "`") setPerf((value) => !value);
       if (event.key.toLowerCase() === "x") setXray((value) => !value);
       if (event.key === "Escape") setTour(null);
@@ -228,6 +234,21 @@ export default function CityApp() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
+  function terminalAction(action: TermAction) {
+    const world = engine.current;
+    switch (action.type) {
+      case "visit": world?.setHighlight([]); setTerminal(false); visit(action.id); break;
+      case "tour": world?.setHighlight([]); setTerminal(false); startTour(); break;
+      case "hire": setTerminal(false); setHire(true); break;
+      case "night": case "day": setLiving(false); setNight(action.type === "night"); world?.setNight(action.type === "night"); break;
+      case "xray": setXray((value) => !value); break;
+      case "perf": setPerf((value) => !value); break;
+      case "overview": if (routeRef.current) goOverview(); break;
+      case "highlight": world?.setHighlight(action.ids); break;
+      case "unhighlight": world?.setHighlight([]); break;
+      case "open": window.open(action.href, "_blank", "noopener,noreferrer"); break;
+    }
+  }
   actions.current = {
     discover,
     activity: launchActivity,
@@ -328,8 +349,8 @@ export default function CityApp() {
   }, [ready, route?.id, route?.floor, travel, enterVersion, place]);
   const titleScreen = help && !route;
   useEffect(() => {
-    engine.current?.setBlocked(titleScreen || directory || journal || activityMenu || hire || !!route?.reading);
-  }, [ready, titleScreen, directory, journal, activityMenu, hire, route?.reading]);
+    engine.current?.setBlocked(titleScreen || directory || journal || activityMenu || hire || terminal || !!route?.reading);
+  }, [ready, titleScreen, directory, journal, activityMenu, hire, terminal, route?.reading]);
   useEffect(() => {
     if (ready && activityRequest) engine.current?.startActivity(activityRequest.id);
   }, [ready, activityRequest]);
@@ -521,6 +542,16 @@ export default function CityApp() {
           <button
             type="button"
             className="city-icon"
+            aria-label="Open the terminal (/)"
+            title="Terminal ( / )"
+            aria-pressed={terminal}
+            onClick={() => setTerminal(!terminal)}
+          >
+            <SquareTerminal size={18} />
+          </button>
+          <button
+            type="button"
+            className="city-icon"
             aria-label={`Show engine performance (~). Quality: ${tier ?? "loading"}`}
             title={tier && `Quality: ${tier}${snapshot.quality?.mode === "auto" ? " (auto)" : ""}`}
             aria-pressed={perf}
@@ -553,6 +584,7 @@ export default function CityApp() {
           </a>
         </div>
       </header>
+      {!titleScreen && <Terminal open={terminal} onClose={() => setTerminal(false)} onAction={terminalAction} />}
       {perf && ready && <PerfHud stats={perfStats} onBatching={perfBatching} onClose={() => setPerf(false)} quality={snapshot.quality} onQuality={(mode) => engine.current?.setQuality(mode)} xray={xray} onXray={setXray} />}
       {tour !== null && cityTour[tour] && (
         <aside className="city-tour" aria-live="polite" aria-label="Autopilot tour">

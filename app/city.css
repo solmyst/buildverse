@@ -2207,3 +2207,23 @@ button.city-recruiter-link {
 }
 
 .city-guide-touch { margin-top: 10px !important; font-size: 12px !important; color: #59736a; }
+
+.city-title-hint { margin-top: 0.75rem; font-size: 0.8125rem; color: #d5e3e2; text-shadow: 0 1px 8px #0b1722cc; }
+.city-title-hint kbd, .city-title-hint code { padding: 1px 6px; border: 1px solid #ffffff55; border-radius: 3px; font: 0.75rem var(--font-jetbrains-mono), monospace; }
+.city-term { position: absolute; z-index: 40; left: 50%; bottom: 88px; transform: translateX(-50%); width: min(780px, calc(100% - 32px)); height: min(46vh, 420px); display: flex; flex-direction: column; background: #07131bf2; color: #cfe3dc; border: 1px solid #3f6f63; border-radius: 10px; box-shadow: 0 24px 80px #000a, 0 0 0 1px #0c2a24, 0 0 40px #4fe3b122; backdrop-filter: blur(10px); font: 13px/1.55 var(--font-jetbrains-mono), ui-monospace, monospace; }
+.city-term > header { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-bottom: 1px solid #1d3a34; }
+.city-term > header > span { display: flex; gap: 6px; }
+.city-term > header i { width: 10px; height: 10px; border-radius: 50%; background: #3a5a52; }
+.city-term > header i:first-child { background: #e0705f; } .city-term > header i:nth-child(2) { background: #e2bb72; } .city-term > header i:last-child { background: #6fd0a0; }
+.city-term > header b { flex: 1; font-weight: 500; font-size: 12px; color: #8db5a8; }
+.city-term > header button { min-height: 28px; padding: 0 10px; font: 11px var(--font-jetbrains-mono), monospace; color: #8db5a8; border: 1px solid #2d524a; border-radius: 4px; cursor: pointer; }
+.city-term-out { flex: 1; overflow-y: auto; padding: 10px 14px; }
+.city-term-line { display: block; width: 100%; text-align: left; white-space: pre-wrap; overflow-wrap: anywhere; color: #cfe3dc; background: none; border: 0; padding: 0; font: inherit; }
+.city-term-line.tone-dim { color: #7f9d94; } .city-term-line.tone-ok { color: #7ee2a8; } .city-term-line.tone-warn { color: #f0b46b; } .city-term-line.tone-accent { color: #f2d28b; font-weight: 600; }
+.city-term-line.is-link { cursor: pointer; text-decoration: none; }
+.city-term-line.is-link:hover, .city-term-line.is-link:focus-visible { background: #14352e; color: #fff; outline: none; }
+.city-term-prompt { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-top: 1px solid #1d3a34; }
+.city-term-prompt > span { color: #7ee2a8; }
+.city-term-prompt input { flex: 1; min-width: 0; background: none; border: 0; outline: none; color: #f2f7f6; font: inherit; caret-color: #7ee2a8; }
+.city-term-prompt input::placeholder { color: #5c7a71; }
+@media (max-width: 650px) { .city-term { bottom: 78px; height: 52vh; font-size: 12px; } .city-term-prompt input { font-size: 16px; } }

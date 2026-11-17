@@ -298,10 +298,13 @@ export function createCity(canvas: HTMLCanvasElement, options: Options) {
     dragged = false,
     lastHover = "";
   let hoveredBuilding: string | null = null, showLabels = false;
+  // Buildings lit up from outside the world, e.g. the terminal's "skills react".
+  let highlighted = new Set<string>();
   function syncNames() {
     const nearbyId = mode === "street" ? nearestDoor(position)?.id : null;
     district.blocks.forEach((block, id) => {
-      block.name.visible = showLabels || id === hoveredBuilding || id === nearbyId || (mode === "building" && active?.id === id);
+      block.name.visible = showLabels || highlighted.has(id) || id === hoveredBuilding || id === nearbyId || (mode === "building" && active?.id === id);
+      if (highlighted.has(id)) block.beacon.visible = true;
     });
   }
   function update() {
@@ -1070,6 +1073,12 @@ void main() {
       return result;
     },
     setShowLabels(value: boolean) { showLabels = value; syncNames(); draw(); },
+    setHighlight(ids: string[]) {
+      highlighted.forEach((id) => { if (!ids.includes(id) && active?.id !== id) district.blocks.get(id)!.beacon.visible = false; });
+      highlighted = new Set(ids);
+      syncNames();
+      draw();
+    },
     celebrateDiscovery() { courtyard.celebrate(); },
     visitPlace(id: string) {
       stopActivity();
