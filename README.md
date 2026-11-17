@@ -1,6 +1,6 @@
 # Buildverse City
 
-A portfolio you drive through. Each of my nine projects is a building in a
+A portfolio you drive through. Each of my nine case studies is a building in a
 procedurally modelled 3D island city, and every floor tells one part of its
 story: the problem and outcome, the engineering, and the decisions.
 
@@ -15,6 +15,7 @@ story: the problem and outcome, the engineering, and the decisions.
   three flagship projects, skills, contact) and ends on a Hire card with email,
   resume, LinkedIn and GitHub.
 - **Terminal:** press <kbd>/</kbd> (or <kbd>Cmd/Ctrl+K</kbd>) for a command line over the city. `ls`, `cat krate`, `cd krate`, `skills react` (lights up the buildings that prove a skill), `repos` and `git log` (live from the GitHub API), `hire`. Every answer is also clickable, so no typing is needed.
+- **The Lab:** one more building for four builds outside the case studies, written from each repository's own README, limits included: Daykit (29 private browser tools, live), TruthGraph AI (explainable claim verification), Context OS and Synapse.
 - **Directory:** a searchable list of every address, projects first. It also
   works when WebGL is unavailable.
 - **Deep links:** every floor has a shareable URL, for example

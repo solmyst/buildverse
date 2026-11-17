@@ -1,5 +1,6 @@
 import {
   projects,
+  labProjects,
   experiences,
   skillGroups,
   decisionsLog,
@@ -8,7 +9,7 @@ import {
   currently,
   heroData,
 } from "@/lib/data";
-import { cityBuildings, type CityBuilding } from "@/lib/city-layout";
+import { cityBuildings, holdsProjects, type CityBuilding } from "@/lib/city-layout";
 export type FloorContent = {
   title: string;
   subtitle: string;
@@ -19,7 +20,7 @@ export type FloorContent = {
 };
 // The project after this one, in city order, so a visitor can read all nine in a row.
 export function nextProject(id: string): CityBuilding | null {
-  const list = cityBuildings.filter((building) => building.kind === "project");
+  const list = cityBuildings.filter(holdsProjects);
   const index = list.findIndex((building) => building.id === id);
   return index >= 0 ? (list[index + 1] ?? null) : null;
 }
@@ -85,6 +86,25 @@ export function floorContent(
         label: "Source & documentation",
         href: project.links.github,
       });
+  } else if (building.kind === "lab") {
+    const lab = labProjects[level];
+    result.title = lab.name;
+    result.subtitle = lab.tagline;
+    result.glance = [
+      { label: "The idea", text: firstSentence(lab.idea, 160) },
+      { label: "What I built", text: firstSentence(lab.whatIBuilt, 160) },
+      { label: "Result", text: firstSentence(lab.outcome, 160) },
+      { label: "Built with", text: lab.stack.slice(0, 5).join(" · ") },
+    ];
+    result.sections = [
+      { heading: "The idea", text: lab.idea },
+      { heading: "What works today", text: lab.outcome },
+      { heading: "What I built", text: lab.whatIBuilt },
+      { heading: "Technology stack", bullets: lab.stack },
+      { heading: "Honest limits", text: `${lab.limits} (Status: ${lab.status}.)` },
+    ];
+    if (lab.links.live) result.links.push({ label: "Open it live", href: lab.links.live });
+    result.links.push({ label: "Source & documentation", href: lab.links.github });
   } else if (building.kind === "experience") {
     const experience = experiences[level];
     result.title = experience.role;

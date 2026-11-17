@@ -57,6 +57,72 @@ export interface Experience {
   tech: string[];
 }
 
+// ─── THE LAB ────────────────────────────────────────────────────────────────
+// Builds from my GitHub that sit outside the nine case studies. Every line below is taken
+// from the repository's own README, including what each one does not do.
+export interface LabProject {
+  id: string;
+  name: string;
+  tagline: string;
+  status: "live" | "prototype" | "private" | "open source";
+  idea: string;
+  outcome: string;
+  whatIBuilt: string;
+  limits: string;
+  stack: string[];
+  links: { live?: string; github: string };
+}
+export const labProjects: LabProject[] = [
+  {
+    id: "daykit",
+    name: "Daykit",
+    tagline: "29 private browser tools. No uploads, no sign-up.",
+    status: "live",
+    idea: "Everyday jobs like merging a PDF or compressing an image should not need an account or a server that sees your files.",
+    outcome: "29 working tools across PDF, image, text, developer, calculators, productivity and media. It installs as an offline-capable web app, and the main bundle is about 81 KB gzipped.",
+    whatIBuilt: "Files stay in browser memory, PDF work runs in a Web Worker, and the text, encoding and audio engines are pure and tested. Tests, a dependency audit and a deploy run on every push to main.",
+    limits: "File tasks are capped at 50 MB. Numeric tools use JavaScript floating point, so they are everyday utilities, not accounting software.",
+    stack: ["React", "Vite", "Web Workers", "Web Crypto", "PWA", "GitHub Actions"],
+    links: { live: "https://solmyst.github.io/Daykit/", github: "https://github.com/solmyst/Daykit" },
+  },
+  {
+    id: "truthgraph",
+    name: "TruthGraph AI",
+    tagline: "Not just an answer: why you should trust it.",
+    status: "open source",
+    idea: "TruthGraph extracts the factual claims in a text, finds evidence, and explains exactly how each trust score was computed. Most AI systems give answers; this one says why you should trust it.",
+    outcome: "A claim verification engine with streaming results, URL and PDF input, four citation formats, a history dashboard and 25 offline tests. It runs free, with a mock or a local Ollama model.",
+    whatIBuilt: "A pipeline of claim extraction, Wikipedia evidence retrieval, stance judging and an explainable trust score. The score is deterministic: 30% source credibility, 35% agreement, 15% quantity, 20% no contradiction. Hybrid retrieval fuses BM25, MiniLM embeddings and a source-trust prior, and a graph-based fake-news classifier ships alongside.",
+    limits: "The default mock judge uses honest heuristics with low confidence. There is no hosted demo yet.",
+    stack: ["Python", "FastAPI", "Graph neural networks", "Sentence embeddings", "BM25", "SQLite", "Ollama", "Docker", "TypeScript"],
+    links: { github: "https://github.com/solmyst/TruthGraph-AI-" },
+  },
+  {
+    id: "context-os",
+    name: "Context OS",
+    tagline: "A private memory for your work and career.",
+    status: "private",
+    idea: "Work context gets lost, so Context OS keeps original sources, structured memory and curated context packs distinct. Nothing is invented: verified claims need an outcome and a source.",
+    outcome: "Projects with tasks, decisions, risks, meetings and evidence; a memory inbox with accept, correct and supersede; context packs exported as Markdown or JSON; verified career evidence for resumes.",
+    whatIBuilt: "Every record belongs to one project, and ownership is checked on every read and write. Updates use version-checked atomic writes with an activity trail. Tokens are random 256-bit secrets stored only as digests.",
+    limits: "No generative provider, embeddings or backup restore in this release. The hosted app needs the owner's sign-in.",
+    stack: ["TypeScript", "Drizzle ORM", "D1 (SQLite)", "MCP"],
+    links: { github: "https://github.com/solmyst/Context_os" },
+  },
+  {
+    id: "synapse",
+    name: "Synapse Company Brain",
+    tagline: "A company's memory: who decided what, and why.",
+    status: "prototype",
+    idea: "When people change roles, the reasoning behind their work leaves with them. Synapse explores keeping that context: decisions, owners and dependencies.",
+    outcome: "A working browser prototype and a researched production blueprint: knowledge map, an Ask-the-brain that cites sources or abstains, human review, decision memory, handover and approval flows, and simulated access roles.",
+    whatIBuilt: "Deterministic retrieval with source references and abstention, a review step where an author cannot approve their own update, and five simulated roles with audit views. No build step and no dependencies.",
+    limits: "No live model, connector or real authentication, and the sample data is fictional. The role switcher is a demo, not a security boundary.",
+    stack: ["JavaScript (ES modules)", "localStorage", "Node test runner"],
+    links: { github: "https://github.com/solmyst/Ai-brain" },
+  },
+];
+
 // ─── PROJECTS ───────────────────────────────────────────────────────────────
 
 export const projects: Project[] = [

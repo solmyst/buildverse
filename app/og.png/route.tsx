@@ -1,10 +1,11 @@
 import { ImageResponse } from "next/og";
 import { cityBuildings } from "@/lib/city-layout";
+import { labProjects, projects as caseStudies } from "@/lib/data";
 
 export const dynamic = "force-static";
 
 const ink = "#9fc4ff";
-const projects = cityBuildings.filter((building) => building.kind === "project").length;
+const projects = caseStudies.length + labProjects.length;
 
 // Exported as /og.png so static hosts serve it with an image content type.
 // Rendered at build time, so the skyline always matches the city's real buildings and floor counts.
@@ -30,7 +31,7 @@ export function GET() {
           <div style={{ fontSize: 22, letterSpacing: 6, color: ink }}>BUILDVERSE CITY · THREE.JS ENGINE</div>
           <div style={{ fontSize: 84, fontWeight: 700, marginTop: 16 }}>Anush Gupta</div>
           <div style={{ fontSize: 30, marginTop: 8, color: "#c9d8f2" }}>
-            {`A portfolio you drive through. ${projects} project buildings, every floor a story.`}
+            {`A portfolio you drive through. ${projects} projects, every floor a story.`}
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "flex-end", gap: 10, height: 190, borderBottom: `2px solid ${ink}`, marginBottom: 20 }}>

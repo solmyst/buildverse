@@ -1,5 +1,5 @@
 export type CityKind =
-  "project" | "experience" | "skills" | "about" | "education" | "decisions" | "contact";
+  "project" | "lab" | "experience" | "skills" | "about" | "education" | "decisions" | "contact";
 export type CityBuilding = {
   id: string;
   name: string;
@@ -203,6 +203,18 @@ export const cityBuildings: CityBuilding[] = [
     style: "academy",
   },
   {
+    id: "lab",
+    name: "The Lab",
+    kind: "lab",
+    x: 33,
+    z: 10,
+    width: 6,
+    depth: 6,
+    color: "#b7e08a",
+    floors: ["Daykit", "TruthGraph AI", "Context OS", "Synapse Company Brain"],
+    style: "studio",
+  },
+  {
     id: "contact",
     name: "Contact Terminal",
     kind: "contact",
@@ -215,6 +227,8 @@ export const cityBuildings: CityBuilding[] = [
     style: "terminal",
   },
 ];
+// Projects and the Lab both hold project work.
+export const holdsProjects = (building: CityBuilding) => building.kind === "project" || building.kind === "lab";
 export type CityPoint = { x: number; z: number };
 export type CityRoute = { id: string; floor: number; reading: boolean };
 export const floorHeight = 3.2;

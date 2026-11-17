@@ -1,5 +1,5 @@
-import { projects, personal, skillGroups, experiences, currently } from "@/lib/data";
-import { cityBuildings } from "@/lib/city-layout";
+import { projects, labProjects, personal, skillGroups, experiences, currently } from "@/lib/data";
+import { cityBuildings, holdsProjects } from "@/lib/city-layout";
 import { floorContent, nextProject } from "@/lib/city-content";
 
 export type TermLine = {
@@ -10,7 +10,7 @@ export type TermLine = {
   href?: string;
 };
 export type TermAction =
-  | { type: "visit"; id: string }
+  | { type: "visit"; id: string; floor?: number }
   | { type: "tour" | "hire" | "night" | "day" | "xray" | "perf" | "overview" | "clear" | "unhighlight" }
   | { type: "open"; href: string }
   | { type: "highlight"; ids: string[] }
@@ -22,7 +22,12 @@ export type PushEvent = { type: string; created_at: string; repo: { name: string
 const out = (lines: TermLine[], ...actions: TermAction[]): TermResult => ({ lines, actions });
 const say = (text: string, tone?: TermLine["tone"]): TermLine => ({ text, tone });
 const blank = say("");
-const projectBuildings = cityBuildings.filter((building) => building.kind === "project");
+const projectBuildings = cityBuildings.filter(holdsProjects);
+// Every project with the building and floor that hold it, so a lab build is as reachable as a case study.
+const allWork = [
+  ...projects.map((p) => ({ id: p.id, name: p.name, tagline: p.tagline, status: p.status as string, stack: p.stack, building: p.id, floor: 0 })),
+  ...labProjects.map((p, floor) => ({ id: p.id, name: p.name, tagline: p.tagline, status: p.status, stack: p.stack, building: "lab", floor })),
+];
 
 export const commands = [
   "help", "whoami", "ls", "cd", "cat", "skills", "stack", "neofetch", "repos", "git", "hire", "resume",
@@ -42,32 +47,35 @@ export function ago(then: Date, now = new Date()) {
   return `${Math.round(minutes / 1440)}d ago`;
 }
 
-// Matches an id, a name or a fragment of either ("relay", "krate", "interview").
-export function findBuilding(query: string) {
+// Matches an id, a name or a fragment of either ("relay", "krate", "daykit"), and says which floor to open.
+export function findTarget(query: string): { building: (typeof cityBuildings)[number]; floor: number } | null {
   const q = query.trim().toLowerCase().replace(/[\s_]+/g, "-");
   if (!q) return null;
-  return (
+  const work = allWork.find((item) => item.id === q) ?? allWork.find((item) => item.id.includes(q) || item.name.toLowerCase().replace(/\s+/g, "-").includes(q));
+  const found =
     cityBuildings.find((building) => building.id === q) ??
+    (work && cityBuildings.find((building) => building.id === work.building)) ??
     cityBuildings.find((building) => building.id.includes(q) || building.name.toLowerCase().replace(/\s+/g, "-").includes(q)) ??
-    null
-  );
+    null;
+  return found ? { building: found, floor: found.kind === "lab" ? (work?.floor ?? 0) : 0 } : null;
 }
+export const findBuilding = (query: string) => findTarget(query)?.building ?? null;
 
 // Every technology named in a project stack, with the projects that prove it.
 export function techIndex() {
   const index = new Map<string, Set<string>>();
-  for (const project of projects)
-    for (const tech of project.stack) {
+  for (const work of allWork)
+    for (const tech of work.stack) {
       const key = tech.toLowerCase();
       if (!index.has(key)) index.set(key, new Set());
-      index.get(key)!.add(project.id);
+      index.get(key)!.add(work.id);
     }
   return index;
 }
 export function projectsUsing(query: string) {
   const q = query.trim().toLowerCase();
   if (!q) return [];
-  return projects.filter((project) => project.stack.some((tech) => tech.toLowerCase().includes(q)));
+  return allWork.filter((work) => work.stack.some((tech) => tech.toLowerCase().includes(q)));
 }
 
 function nearest(word: string) {
@@ -96,13 +104,14 @@ export function complete(prefix: string): string[] {
 }
 
 function brief(id: string): TermResult {
-  const building = findBuilding(id);
-  if (!building) return out([say(`cat: ${id}: no such address. Try 'ls'.`, "warn")]);
-  const content = floorContent(building, 0);
+  const target = findTarget(id);
+  if (!target) return out([say(`cat: ${id}: no such address. Try 'ls'.`, "warn")]);
+  const { building, floor } = target;
+  const content = floorContent(building, floor);
   const lines: TermLine[] = [say(`# ${building.name}`, "accent"), say(content.subtitle, "dim"), blank];
   for (const row of content.glance ?? []) lines.push(say(`${row.label.padEnd(12)} ${row.text}`));
   if (!content.glance) for (const section of content.sections.slice(0, 2)) lines.push(say(section.heading, "accent"), say(section.text ?? section.bullets?.join(" · ") ?? ""));
-  lines.push(blank, { text: `→ cd ${building.id}   (open the full story in the city)`, tone: "ok", run: `cd ${building.id}` });
+  lines.push(blank, { text: `→ cd ${building.kind === "lab" ? labProjects[floor].id : building.id}   (open the full story in the city)`, tone: "ok", run: `cd ${building.kind === "lab" ? labProjects[floor].id : building.id}` });
   return out(lines);
 }
 
@@ -112,13 +121,13 @@ function skills(arg: string): TermResult {
     if (!hits.length) return out([say(`No project lists "${arg}" in its stack. Try 'stack' for everything I used.`, "warn")], { type: "unhighlight" });
     return out(
       [
-        say(`${arg} appears in ${hits.length} of ${projects.length} projects. The buildings are lit up in the city:`, "ok"),
-        ...hits.map((project) => ({ text: `  ${project.name.padEnd(26)} ${project.tagline}`, run: `cd ${project.id}` })),
+        say(`${arg} appears in ${hits.length} of ${allWork.length} projects. The buildings are lit up in the city:`, "ok"),
+        ...hits.map((work) => ({ text: `  ${work.name.padEnd(26)} ${work.tagline}`, run: `cd ${work.id}` })),
         blank,
         say("Click a line to open that project.", "dim"),
       ],
       { type: "overview" },
-      { type: "highlight", ids: hits.map((project) => project.id) },
+      { type: "highlight", ids: Array.from(new Set(hits.map((work) => work.building))) },
     );
   }
   const lines: TermLine[] = [];
@@ -142,7 +151,7 @@ function neofetch(): TermResult {
     `Role      ${personal.terminalProfile.roles.join(" + ")}`,
     `Uptime    ${personal.year}`,
     `Shell     ${personal.terminalProfile.stack.join(" · ")}`,
-    `Projects  ${projects.length} built, ${projectBuildings.length} buildings`,
+    `Projects  ${allWork.length} built, ${projectBuildings.length} buildings`,
     `Learning  ${personal.terminalProfile.learning.join(", ")}`,
     `Status    ${personal.terminalProfile.status}`,
     `Open to   ${personal.openTo}`,
@@ -206,17 +215,18 @@ export function runCommand(input: string, history: string[] = []): TermResult {
     case "help": case "?": return help();
     case "whoami": return out([say(personal.name, "accent"), say(`${personal.terminalProfile.roles.join(" + ")} · ${personal.year}`), say(personal.terminalProfile.status, "dim"), say(`Open to ${personal.openTo}.`, "ok")]);
     case "ls": return out([
-      say(`${projectBuildings.length} projects. Click one or type 'cat <name>':`, "dim"),
-      ...projects.map((project) => ({ text: `  ${project.id.padEnd(20)} ${project.status.padEnd(9)} ${project.tagline}`, run: `cat ${project.id}` })),
+      say(`${allWork.length} projects. Click one or type 'cat <name>':`, "dim"),
+      ...allWork.map((work) => ({ text: `  ${work.id.padEnd(20)} ${work.status.padEnd(11)} ${work.tagline}`, run: `cat ${work.id}` })),
       blank,
       ...experiences.map((job) => say(`  ${job.company.padEnd(20)} ${job.period.padEnd(14)} ${job.role}`, "dim")),
     ]);
     case "cat": return arg ? brief(arg) : out([say("usage: cat <project>   e.g. cat krate", "warn")]);
     case "cd": {
-      const building = findBuilding(arg);
-      if (!building) return out([say(arg ? `cd: ${arg}: no such address. Try 'ls'.` : "usage: cd <project>   e.g. cd krate", "warn")]);
+      const target = findTarget(arg);
+      if (!target) return out([say(arg ? `cd: ${arg}: no such address. Try 'ls'.` : "usage: cd <project>   e.g. cd krate", "warn")]);
+      const { building, floor } = target;
       const next = nextProject(building.id);
-      return out([say(`Flying to ${building.name}…`, "ok"), say(next ? `Up next: ${next.name}` : "That's the last project.", "dim")], { type: "visit", id: building.id });
+      return out([say(`Flying to ${building.kind === "lab" ? labProjects[floor].name : building.name}…`, "ok"), say(next ? `Up next: ${next.name}` : "That's the last project.", "dim")], { type: "visit", id: building.id, floor });
     }
     case "skills": return skills(arg);
     case "stack": return stack();

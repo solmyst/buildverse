@@ -146,7 +146,7 @@ test("every physical floor resolves real written content", () => {
         `${building.id}/${floor}: link`,
       );
     }
-  assert.equal(floorCount, 54);
+  assert.equal(floorCount, 58, "54 original floors plus four Lab floors");
 });
 test("project floors separate the problem, implementation, and decisions", () => {
   const interview = cityBuildings.find(

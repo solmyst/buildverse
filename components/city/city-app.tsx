@@ -29,7 +29,7 @@ import {
   parseCityRoute,
   type CityRoute,
 } from "@/lib/city-layout";
-import { personal } from "@/lib/data";
+import { labProjects, personal, projects } from "@/lib/data";
 import type { createCity, CitySnapshot } from "./engine";
 import DiscoveryJournal from "./discovery-journal";
 import { isDiscovery, restoreDiscoveries, advanceSecret, type DiscoveryId } from "@/lib/city-discoveries";
@@ -238,7 +238,7 @@ export default function CityApp() {
   function terminalAction(action: TermAction) {
     const world = engine.current;
     switch (action.type) {
-      case "visit": world?.setHighlight([]); setTerminal(false); visit(action.id); break;
+      case "visit": world?.setHighlight([]); setTerminal(false); visit(action.id, action.floor ?? 0); break;
       case "tour": world?.setHighlight([]); setTerminal(false); startTour(); break;
       case "hire": setTerminal(false); setHire(true); break;
       case "night": case "day": setLiving(false); setNight(action.type === "night"); world?.setNight(action.type === "night"); break;
@@ -618,7 +618,7 @@ export default function CityApp() {
             <span>VERSE</span>
           </h2>
           <p className="city-title-tagline">
-            {cityBuildings.length} buildings. Nine projects. One city you can walk.
+            {cityBuildings.length} buildings. {projects.length + labProjects.length} projects. One city you can walk.
           </p>
           <ol className="city-title-steps">
             <li><b>1</b> Pick a building</li>

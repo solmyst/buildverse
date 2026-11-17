@@ -1,7 +1,7 @@
 "use client";
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import { floorContent, nextProject } from "@/lib/city-content";
-import { type CityBuilding } from "@/lib/city-layout";
+import { holdsProjects, type CityBuilding } from "@/lib/city-layout";
 import CityDialog from "./dialog";
 export default function Dossier({
   building,
@@ -21,12 +21,12 @@ export default function Dossier({
 }) {
   const content = building ? floorContent(building, floor) : null;
   const last = !!building && floor === building.floors.length - 1;
-  const upNext = building && last && onNext && building.kind === "project" ? nextProject(building.id) : null;
+  const upNext = building && last && onNext && holdsProjects(building) ? nextProject(building.id) : null;
   return (
     <CityDialog
       open={open && !!building}
       onClose={onClose}
-      label={building?.kind === "project" ? "Project brief" : "Building overview"}
+      label={building && holdsProjects(building) ? "Project brief" : "Building overview"}
       side="dossier"
     >
       {building && content && (
@@ -94,7 +94,7 @@ export default function Dossier({
             <span>
               {floor + 1} / {building.floors.length}
             </span>
-            {last && onNext && building.kind === "project" ? (
+            {last && onNext && holdsProjects(building) ? (
               <button type="button" className="dossier-next" onClick={() => onNext(upNext)}>
                 {upNext ? `Next project: ${upNext.name}` : "Done? Get in touch"}
                 <ArrowRight size={16} />

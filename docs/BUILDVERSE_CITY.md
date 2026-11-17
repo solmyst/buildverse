@@ -1,6 +1,6 @@
 # Buildverse City
 
-The whole portfolio becomes one spatial experience. There is no scrolling landing page, project grid, or professional section beneath the canvas. Fourteen destinations house all nine projects, experience, skills, biography, decisions, and contact. Each project has three physical floors: problem/outcome, engineering, and decisions. Public buildings use content-driven floor counts.
+The whole portfolio becomes one spatial experience. There is no scrolling landing page, project grid, or professional section beneath the canvas. Sixteen destinations house all nine case studies, The Lab (four more builds from GitHub), experience, skills, biography, decisions, and contact. Each project has three physical floors: problem/outcome, engineering, and decisions. Public buildings use content-driven floor counts.
 
 ## Interaction contract
 

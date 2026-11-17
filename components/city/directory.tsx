@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { ArrowUpRight, Building2, Search } from "lucide-react";
 import { floorContent } from "@/lib/city-content";
-import { cityBuildings } from "@/lib/city-layout";
+import { cityBuildings, holdsProjects } from "@/lib/city-layout";
 import { valleyPlaces } from "@/lib/valley-motion";
 import CityDialog from "./dialog";
 export default function CityDirectory({
@@ -29,12 +29,12 @@ export default function CityDirectory({
     (building) =>
       (filter === "All addresses" ||
         (filter === "Projects"
-          ? building.kind === "project"
-          : building.kind !== "project")) &&
+          ? holdsProjects(building)
+          : !holdsProjects(building))) &&
       `${building.name} ${building.floors.join(" ")}`
         .toLowerCase()
         .includes(query.toLowerCase()),
-  ).sort((a, b) => Number(b.kind === "project") - Number(a.kind === "project"));
+  ).sort((a, b) => Number(holdsProjects(b)) - Number(holdsProjects(a)));
   const places = onExplore && filter !== "Projects" ? valleyPlaces.filter(place => `${place.name} ${place.detail}`.toLowerCase().includes(query.toLowerCase())) : [];
   return (
     <CityDialog
@@ -95,7 +95,9 @@ export default function CityDirectory({
               <strong>{building.name}</strong>
               <small>
                 {building.floors.length} floors ·{" "}
-                {building.kind === "project"
+                {building.kind === "lab"
+                  ? "Daykit, TruthGraph, Context OS, Synapse"
+                  : holdsProjects(building)
                   ? floorContent(building, 0).subtitle
                   : "Life & work"}
                 {visited.includes(building.id) ? " · Visited" : ""}

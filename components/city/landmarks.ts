@@ -2,14 +2,14 @@ import * as THREE from "three";
 import { type CityBuilding, floorHeight } from "@/lib/city-layout";
 import type { SceneKit } from "./scene-kit";
 
-export type Architecture = "interlock" | "pagoda" | "ribbon" | "origami" | "capsule" | "bridge" | "helix" | "speed" | "gateway" | "orbit" | "dune" | "pixels" | "library" | "lotus" | "campus";
+export type Architecture = "interlock" | "pagoda" | "ribbon" | "origami" | "capsule" | "bridge" | "helix" | "speed" | "gateway" | "orbit" | "dune" | "pixels" | "library" | "lotus" | "campus" | "lab";
 export const landmarkStyles: Record<string, Architecture> = {
   jecrc: "campus",
   krate: "interlock", "interview-ace": "pagoda", "relay-voice": "ribbon",
   "resume-tailor": "origami", memeforge: "capsule", experience: "bridge",
   skills: "helix", "f1-dashboard": "speed", "trip-helper": "gateway",
   about: "orbit", "sand-art": "dune", "ascii-camera": "pixels",
-  decisions: "library", contact: "lotus",
+  decisions: "library", contact: "lotus", lab: "lab",
 };
 
 // A continuous curved roof: corners lift away from the central ridge.
@@ -103,7 +103,7 @@ export function createLandmark(kit: SceneKit, root: THREE.Group, b: CityBuilding
         for (const x of [-4.7, -2.1, 2.1, 4.7]) box(level, [0.18, 0.7, 6.5], [x, 3.3, -0.5], "#b5664e");
         box(level, [10.2, 0.15, 6.7], [0, 3.1, -0.5], ivory);
       }
-    } else if (["ribbon", "helix", "orbit", "dune", "lotus"].includes(style)) {
+    } else if (["ribbon", "helix", "orbit", "dune", "lotus", "lab"].includes(style)) {
       const radius = w * (style === "helix" ? 0.41 : style === "dune" ? 0.48 - t * 0.1 : 0.43);
       const shell = disc(level, radius, 2.85, 1.5, dark);
       shell.material = glass;
@@ -235,6 +235,11 @@ export function createLandmark(kit: SceneKit, root: THREE.Group, b: CityBuilding
   } else if (style === "pagoda" || style === "library") {
     kit.cylinder(root, 0.11, 2.1, [0, roofY + 0.9, 0], brass, 24, 0.025);
     torus(kit, root, 0.38, 0.07, roofY + 0.5, brass);
+  } else if (style === "lab") {
+    // A glass flask on the roof, with an antenna: the place where experiments happen.
+    kit.sphere(root, w * 0.3, [0, roofY + w * 0.22, 0], "#c8ecd0").material = glass;
+    kit.cylinder(root, 0.07, 2.4, [0, roofY + w * 0.5 + 1, 0], brass, 16, 0.02);
+    torus(kit, root, w * 0.36, 0.08, roofY + 0.3, brass, 0);
   } else if (style === "dune") {
     const dome = kit.sphere(root, 2, [0, roofY - 0.1, 0], ivory);
     dome.scale.set(1.15, 0.5, 0.85);

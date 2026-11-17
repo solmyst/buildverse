@@ -26,11 +26,18 @@ test("every project's entry floor opens with a short glance, not a wall of text"
     for (const row of glance) assert.ok(row.text.length > 3 && row.text.length <= 151, `${building.id} ${row.label}`);
     assert.equal(floorContent(building, 1).glance, undefined);
   }
+  const lab = cityBuildings.find((b) => b.kind === "lab");
+  for (let floor = 0; floor < lab.floors.length; floor++) {
+    const content = floorContent(lab, floor);
+    assert.equal(content.title, lab.floors[floor]);
+    assert.ok(content.glance.length === 4 && content.sections.some((s) => s.heading === "Honest limits"), `lab floor ${floor}`);
+  }
   assert.equal(firstSentence("One. Two."), "One.");
 });
 const { nextProject } = await import(content);
-test("projects chain in city order and the last one has no successor", () => {
-  const ids = cityBuildings.filter((b) => b.kind === "project").map((b) => b.id);
+test("projects chain in city order, end at the Lab, and the Lab has no successor", () => {
+  const ids = cityBuildings.filter((b) => b.kind === "project" || b.kind === "lab").map((b) => b.id);
+  assert.equal(ids.at(-1), "lab");
   ids.forEach((id, i) => assert.equal(nextProject(id)?.id ?? null, ids[i + 1] ?? null, id));
   assert.equal(nextProject("contact"), null);
 });

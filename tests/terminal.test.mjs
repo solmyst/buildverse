@@ -14,9 +14,11 @@ const text = (result) => result.lines.map((line) => line.text).join("\n");
 test("ls lists every project and each line is clickable", () => {
   const result = runCommand("ls");
   for (const project of projects) assert.ok(result.lines.some((line) => line.run === `cat ${project.id}`), project.id);
+  for (const id of ["daykit", "truthgraph", "context-os", "synapse"]) assert.ok(result.lines.some((line) => line.run === `cat ${id}`), id);
 });
 test("cd flies to a project by id or fuzzy name", () => {
-  assert.deepEqual(runCommand("cd krate").actions, [{ type: "visit", id: "krate" }]);
+  assert.deepEqual(runCommand("cd krate").actions, [{ type: "visit", id: "krate", floor: 0 }]);
+  assert.deepEqual(runCommand("cd truthgraph").actions, [{ type: "visit", id: "lab", floor: 1 }], "a lab build opens its own floor");
   assert.equal(findBuilding("relay").id, "relay-voice");
   assert.match(text(runCommand("cd nope")), /no such address/);
 });
@@ -28,7 +30,8 @@ test("cat prints the brief without leaving the terminal", () => {
 test("skills <tech> proves a skill with projects and highlights their buildings", () => {
   const result = runCommand("skills react");
   const ids = result.actions.find((action) => action.type === "highlight").ids;
-  assert.deepEqual(ids.sort(), projectsUsing("react").map((project) => project.id).sort());
+  assert.deepEqual(ids.sort(), Array.from(new Set(projectsUsing("react").map((work) => work.building))).sort());
+  assert.ok(ids.includes("lab"), "Daykit uses React, so the Lab lights up");
   assert.ok(ids.length >= 2);
   assert.equal(runCommand("skills cobol").actions[0].type, "unhighlight");
 });
